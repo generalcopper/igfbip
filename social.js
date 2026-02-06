@@ -7,6 +7,8 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
@@ -111,21 +113,151 @@ function platformsLabel(platforms) {
   return out || "—";
 }
 
+function normalizeLower(s = "") {
+  return String(s).trim().toLowerCase();
+}
+
+function isEmailAllowed(email) {
+  const e = normalizeLower(email);
+  if (!e) return false;
+
+  for (const raw of ALLOWED_EMAILS) {
+    const rule = normalizeLower(raw);
+    if (!rule) continue;
+
+    // Regola: email completa (es. "nome@dominio.com")
+    if (rule.includes("@")) {
+      if (e === rule) return true;
+      continue;
+    }
+
+    // Regola: dominio (es. "dominio.com" oppure "@dominio.com")
+    const domain = rule.startsWith("@") ? rule.slice(1) : rule;
+    if (e.endsWith(`@${domain}`) || e === domain) return true;
+  }
+
+  return false;
+}
+
 function requireAuth(user) {
   if (!user) return false;
-  const email = (user.email || "").toLowerCase();
-  return ALLOWED_EMAILS.map(e => e.toLowerCase()).includes(email);
+  return isEmailAllowed(user.email || "");
+}
+
+function setAuthBusy(isBusy) {
+  btnLogin.disabled = !!isBusy;
+  btnLogin.style.opacity = isBusy ? "0.8" : "";
+  btnLogin.style.pointerEvents = isBusy ? "none" : "";
+}
+
+function shouldFallbackToRedirect(err) {
+  const code = normalizeLower(err?.code || "");
+  const msg = normalizeLower(err?.message || "");
+
+  if (code === "popup-timeout") return true;
+
+  const popupCodes = new Set([
+    "auth/popup-blocked",
+    "auth/popup-closed-by-user",
+    "auth/cancelled-popup-request",
+    "auth/operation-not-supported-in-this-environment"
+  ]);
+
+  if (popupCodes.has(code)) return true;
+
+  // Alcuni browser su GitHub Pages bloccano il controllo popup.closed/window.close per COOP.
+  if (msg.includes("cross-origin-opener-policy")) return true;
+  if (msg.includes("window.close") || msg.includes("window.closed")) return true;
+
+  return false;
+}
+
+function promiseWithTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => {
+      const e = new Error("POPUP_TIMEOUT");
+      e.code = "popup-timeout";
+      reject(e);
+    }, ms);
+
+    promise
+      .then((v) => {
+        clearTimeout(t);
+        resolve(v);
+      })
+      .catch((e) => {
+        clearTimeout(t);
+        reject(e);
+      });
+  });
+}
+
+async function loginGoogle() {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+
+  authChip.textContent = "Accesso in corso…";
+  setAuthBusy(true);
+
+  try {
+    // Popup first: UX migliore.
+    // Su GitHub Pages alcuni browser possono bloccare window.close/closed (COOP) → fallback redirect.
+    await promiseWithTimeout(signInWithPopup(auth, provider), 7000);
+    // Se va a buon fine, onAuthStateChanged aggiorna la UI.
+  } catch (err) {
+    const code = normalizeLower(err?.code || "");
+
+    if (code === "auth/unauthorized-domain") {
+      setAuthBusy(false);
+      authChip.textContent = "Dominio non autorizzato";
+      alert(
+        "Dominio non autorizzato su Firebase Auth.
+
+Vai in Firebase Console → Authentication → Settings → Authorized domains e aggiungi:
+- generalcopper.github.io"
+      );
+      throw err;
+    }
+
+    if (shouldFallbackToRedirect(err)) {
+      authChip.textContent = "Reindirizzamento per accesso…";
+      // Innesca redirect: la pagina si ricarica e poi getRedirectResult() chiude il cerchio.
+      await signInWithRedirect(auth, provider);
+      return;
+    }
+
+    console.error("Login error:", err);
+    authChip.textContent = "Errore accesso";
+    alert("Accesso non riuscito. Riprova.");
+    throw err;
+  } finally {
+    // Se è andata in redirect la pagina cambierà; se è andata bene/persa, riabilitiamo il bottone.
+    setAuthBusy(false);
+  }
 }
 
 // ---- auth
-btnLogin.addEventListener("click", async () => {
-  const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
-});
+btnLogin.addEventListener("click", loginGoogle);
 
 btnLogout.addEventListener("click", async () => {
   await signOut(auth);
 });
+
+// Gestione ritorno da signInWithRedirect()
+(async () => {
+  try {
+    await getRedirectResult(auth);
+    // onAuthStateChanged gestisce il resto.
+  } catch (err) {
+    const code = normalizeLower(err?.code || "");
+    if (code === "auth/unauthorized-domain") {
+      authChip.textContent = "Dominio non autorizzato";
+      console.error(err);
+    } else if (code) {
+      console.error("Redirect result error:", err);
+    }
+  }
+})();
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
