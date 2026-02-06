@@ -6,7 +6,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/fireba
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   signOut,
@@ -46,10 +45,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Completa eventuale login via redirect (in caso di fallback)
-getRedirectResult(auth).catch((err) => {
-  if (err) console.warn("[auth] redirect result error:", err);
-});
+// GitHub Pages: il popup può essere bloccato/instabile (COOP). Con redirect è più affidabile.
+// Completa eventuale accesso via redirect senza sporcare la console.
+getRedirectResult(auth).catch(() => {});
 
 // ---- UI refs
 const $ = (id) => document.getElementById(id);
@@ -135,36 +133,16 @@ function requireAuth(user) {
     // - email completa: "nome@dominio.com"
     // - dominio: "dominio.com" (abilita qualunque @dominio.com)
     if (entry.includes("@")) return email === entry;
-    return domain === entry || domain === entry.replace(/^@/, "");
+    const d = entry.replace(/^@/, "");
+    return domain === d;
   });
 }
 
 // ---- auth
-let lastAuthMessage = "";
-
 btnLogin.addEventListener("click", async () => {
   const provider = new GoogleAuthProvider();
-
-  // Su hosting statici (es. GitHub Pages) alcuni browser bloccano i controlli su window.close/closed
-  // e il popup può restare "appeso". Facciamo:
-  // - popup come prima scelta
-  // - se non risponde entro poco o fallisce → fallback a redirect (sempre affidabile)
-  authChip.textContent = "Apertura accesso…";
-
-  const POPUP_TIMEOUT_MS = 3500;
-
-  try {
-    await Promise.race([
-      signInWithPopup(auth, provider),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("popup-timeout")), POPUP_TIMEOUT_MS)
-      )
-    ]);
-  } catch (err) {
-    console.warn("[auth] popup non disponibile, fallback redirect:", err);
-    authChip.textContent = "Apertura accesso…";
-    await signInWithRedirect(auth, provider);
-  }
+  authChip.textContent = "Accesso in corso…";
+  await signInWithRedirect(auth, provider);
 });
 
 btnLogout.addEventListener("click", async () => {
@@ -173,10 +151,7 @@ btnLogout.addEventListener("click", async () => {
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    authChip.textContent = lastAuthMessage || "Non autenticato";
-    // Mantieni il messaggio (es. Accesso non autorizzato) finché l’utente non riprova
-    
-
+    authChip.textContent = "Non autenticato";
     btnLogin.classList.remove("hidden");
     btnLogout.classList.add("hidden");
     mustLogin.classList.remove("hidden");
@@ -187,13 +162,10 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   if (!requireAuth(user)) {
-    lastAuthMessage = "Accesso non autorizzato: " + (user.email || "");
-    authChip.textContent = lastAuthMessage;
+    authChip.textContent = "Accesso non autorizzato";
     await signOut(auth);
     return;
   }
-
-  lastAuthMessage = "";
 
   authChip.textContent = user.email || "Autenticato";
   btnLogin.classList.add("hidden");
