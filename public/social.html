@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>iLovePaghe — Social Publisher</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:rgba(15,23,42,.08);
+      --brand:#1c6fe6;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--text);
+      background:linear-gradient(180deg, #f9fbff, var(--bg));
+    }
+    a{color:inherit}
+    .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 60px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:16px;margin-bottom:18px;
+    }
+    .brand{
+      display:flex;align-items:center;gap:10px;min-width:240px;
+    }
+    .logoDot{
+      width:11px;height:11px;border-radius:999px;background:var(--brand);
+      box-shadow:0 0 0 6px rgba(28,111,230,.10);
+    }
+    .title{font-size:16px;letter-spacing:.2px}
+    .subtitle{font-size:12.5px;color:var(--muted);margin-top:2px}
+    .right{
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end
+    }
+    .chip{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.7);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12.5px;
+      color:var(--muted);
+    }
+    .btn{
+      border:1px solid var(--line);
+      background:var(--card);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      cursor:pointer;
+      transition:transform .06s ease, background .2s ease, border-color .2s ease;
+      user-select:none;
+    }
+    .btn:hover{background:#fbfdff}
+    .btn:active{transform:translateY(1px)}
+    .btnPrimary{
+      background:var(--brand);
+      color:#fff;
+      border-color:rgba(28,111,230,.35);
+    }
+    .btnPrimary:hover{background:#1762cf}
+    .btnDanger{
+      background:#fff;
+      color:#b42318;
+      border-color:rgba(180,35,24,.18);
+    }
+    .btnDanger:hover{background:rgba(180,35,24,.04)}
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap:14px;
+      align-items:start;
+      margin-top:12px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns: 1fr}
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow:0 8px 24px rgba(15,23,42,.04);
+    }
+    .h{
+      display:flex;align-items:flex-end;justify-content:space-between;gap:14px;
+      padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--line);
+    }
+    .h .k{font-size:14px}
+    .h .m{font-size:12.5px;color:var(--muted)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 640px){ .row{grid-template-columns:1fr} }
+    label{display:block;font-size:12.5px;color:var(--muted);margin:2px 0 6px}
+    input, textarea, select{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:11px 12px;
+      font-size:13px;
+      outline:none;
+      background:#fff;
+      color:var(--text);
+    }
+    textarea{min-height:118px;resize:vertical}
+    input:focus, textarea:focus, select:focus{
+      border-color:rgba(28,111,230,.45);
+      box-shadow:0 0 0 4px rgba(28,111,230,.10);
+    }
+    .checks{
+      display:flex;gap:10px;flex-wrap:wrap;margin-top:2px
+    }
+    .check{
+      display:flex;align-items:center;gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12.5px;
+      color:var(--muted);
+      background:rgba(255,255,255,.6);
+    }
+    .check input{width:auto;margin:0}
+    .actions{
+      display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;justify-content:flex-end
+    }
+    .note{
+      font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:10px
+    }
+    .tableWrap{overflow:auto;border-radius:14px;border:1px solid var(--line)}
+    table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;min-width:980px}
+    thead th{
+      position:sticky;top:0;background:#fff;
+      border-bottom:1px solid var(--line);
+      font-size:12.5px;color:var(--muted);
+      text-align:left;padding:12px 12px;
+      font-weight:500;
+    }
+    tbody td{
+      border-bottom:1px solid var(--line);
+      padding:12px 12px;
+      font-size:13px;
+      vertical-align:top;
+    }
+    tbody tr:hover{background:#fbfdff}
+    .status{
+      display:inline-flex;align-items:center;gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 9px;
+      font-size:12px;
+      color:var(--muted);
+      background:rgba(255,255,255,.7);
+      white-space:nowrap;
+    }
+    .dot{width:7px;height:7px;border-radius:999px;background:rgba(100,116,139,.65)}
+    .dot.ok{background:rgba(34,197,94,.75)}
+    .dot.warn{background:rgba(245,158,11,.75)}
+    .dot.bad{background:rgba(239,68,68,.75)}
+    .small{font-size:12.5px;color:var(--muted)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+    .inlineBtns{display:flex;gap:8px;flex-wrap:wrap}
+    .footer{
+      margin-top:18px;
+      font-size:12px;color:var(--muted);
+      display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    }
+    .hidden{display:none !important}
+    .warnBox{
+      border:1px solid rgba(245,158,11,.25);
+      background:rgba(245,158,11,.06);
+      border-radius:14px;
+      padding:12px;
+      color:#7c5a10;
+      font-size:13px;
+      line-height:1.35;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logoDot"></div>
+        <div>
+          <div class="title">Social Publisher</div>
+          <div class="subtitle">iLovePaghe — IG + FB (privato)</div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div id="authChip" class="chip">Non autenticato</div>
+        <button id="btnLogin" class="btn btnPrimary">Accedi</button>
+        <button id="btnLogout" class="btn btnDanger hidden">Esci</button>
+      </div>
+    </div>
+
+    <div id="mustLogin" class="warnBox">
+      Accedi con Google (account autorizzato) per gestire e programmare i contenuti.
+    </div>
+
+    <div id="app" class="grid hidden">
+      <!-- Left: composer -->
+      <div class="card">
+        <div class="h">
+          <div>
+            <div class="k">Nuovo contenuto</div>
+            <div class="m">Crea bozza → approva → schedula</div>
+          </div>
+          <div class="small mono" id="uidBadge"></div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Piattaforme</label>
+            <div class="checks">
+              <label class="check"><input id="pIG" type="checkbox" checked /> Instagram</label>
+              <label class="check"><input id="pFB" type="checkbox" checked /> Facebook</label>
+            </div>
+          </div>
+          <div>
+            <label>Formato</label>
+            <select id="format">
+              <option value="image">Post immagine</option>
+              <option value="reel">Reel (video)</option>
+              <option value="carousel">Carosello (immagini)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <label>Caption</label>
+          <textarea id="caption" placeholder="Testo pulito, diretto. Una CTA chiara."></textarea>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <div>
+            <label>Hashtag (facoltativi)</label>
+            <input id="hashtags" placeholder="#paghe #hr #cedolini" />
+          </div>
+          <div>
+            <label>Media URL (HTTPS)</label>
+            <input id="mediaUrl" placeholder="https://..." />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <div>
+            <label>Programmazione</label>
+            <input id="scheduleAt" type="datetime-local" />
+          </div>
+          <div>
+            <label>Stato iniziale</label>
+            <select id="initialStatus">
+              <option value="draft" selected>Bozza</option>
+              <option value="approved">Approvato</option>
+              <option value="queued">In coda</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btnClear" class="btn">Pulisci</button>
+          <button id="btnSave" class="btn btnPrimary">Salva bozza</button>
+        </div>
+
+        <div class="note">
+          Questa pagina salva su Firestore. Il publisher (Cloud Run) leggerà la coda e pubblicherà su IG/FB via API ufficiali.
+        </div>
+      </div>
+
+      <!-- Right: queue -->
+      <div class="card">
+        <div class="h">
+          <div>
+            <div class="k">Coda contenuti</div>
+            <div class="m">Ultimi 50 elementi (bozze, schedulati, pubblicati)</div>
+          </div>
+          <div class="inlineBtns">
+            <button id="btnRefresh" class="btn">Aggiorna</button>
+          </div>
+        </div>
+
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:130px">Stato</th>
+                <th style="width:170px">Quando</th>
+                <th style="width:120px">Piattaforme</th>
+                <th>Caption</th>
+                <th style="width:170px">Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+
+        <div class="footer">
+          <div>© 2026 iLovePaghe</div>
+          <div class="mono">Social admin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./social.js?v=20260206b"></script>
+</body>
+</html>
