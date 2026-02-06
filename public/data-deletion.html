@@ -1,0 +1,41 @@
+mkdir -p public
+
+cat > public/data-deletion.html <<'EOF'
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eliminazione dati utente</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;background:#f6f7f8;color:#1f2937}
+    .wrap{max-width:900px;margin:0 auto;padding:28px 18px}
+    .card{background:#fff;border:1px solid rgba(15,23,42,.12);border-radius:18px;padding:18px 16px}
+    h1{font-size:18px;margin:0 0 8px}
+    p,li{font-size:14px;line-height:1.55;color:rgba(15,23,42,.78)}
+    a{color:#1c6fe6;text-decoration:none}
+    a:hover{text-decoration:underline}
+    .muted{color:rgba(15,23,42,.6)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Eliminazione dei dati dell’utente</h1>
+      <p class="muted">Questa pagina spiega come richiedere la cancellazione dei dati associati all’app.</p>
+
+      <p><b>Dati trattati:</b> l’app può memorizzare token di accesso Meta, ID Pagina/Account Instagram selezionati e log tecnici.</p>
+
+      <p><b>Come richiedere la cancellazione:</b></p>
+      <ol>
+        <li>Invia una mail a <a href="mailto:paghe@ilovepaghe.com">paghe@ilovepaghe.com</a></li>
+        <li>Oggetto: <b>Richiesta eliminazione dati Meta</b></li>
+        <li>Nel testo indica: nome e cognome, email dell’account, e se possibile l’ID utente Facebook/Meta.</li>
+      </ol>
+
+      <p>Privacy: <a href="https://www.ilovepaghe.com/privacy-policy.html">Privacy Policy</a></p>
+    </div>
+  </div>
+</body>
+</html>
+EOF
