@@ -1,12 +1,10 @@
-// iLovePaghe — Social Publisher (IG + FB) — Firestore queue
-// UI super semplice: salva bozze e gestisce stati.
-// Il tuo Cloud Run publisher poi leggerà i doc con status=queued oppure scheduleAt <= now.
+// Social Publisher (IG + FB) — Admin UI (GitHub Pages)
+// Obiettivo: auth stabile su GitHub Pages (no COOP popup), Firestore robusto con messaggi chiari.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   signOut,
@@ -25,7 +23,7 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-// 1) Incolla qui la tua config Firebase (la stessa che usi nel resto del sito)
+// Firebase config
 const firebaseConfig = {
   "projectId": "ilp-social-admin-2602061451",
   "appId": "1:108182410176:web:38bf497affced52cb92e25",
@@ -37,7 +35,9 @@ const firebaseConfig = {
   "version": "2"
 };
 
-
+// Lista consentiti:
+// - email completa: "nome@dominio.com"
+// - oppure dominio: "dominio.com" (consente qualunque @dominio.com)
 const ALLOWED_EMAILS = [
   "ludovicogiarola.com"
 ];
@@ -80,10 +80,40 @@ function escapeHtml(str = "") {
     .replaceAll("'", "&#039;");
 }
 
+function normalizeLower(s = "") {
+  return String(s).trim().toLowerCase();
+}
+
+function isEmailAllowed(email) {
+  const e = normalizeLower(email);
+  if (!e) return false;
+
+  for (const raw of ALLOWED_EMAILS) {
+    const rule = normalizeLower(raw);
+    if (!rule) continue;
+
+    // email completa
+    if (rule.includes("@")) {
+      if (e === rule) return true;
+      continue;
+    }
+
+    // dominio ("dominio.com" oppure "@dominio.com")
+    const domain = rule.startsWith("@") ? rule.slice(1) : rule;
+    if (e.endsWith(`@${domain}`) || e === domain) return true;
+  }
+
+  return false;
+}
+
+function requireAuth(user) {
+  if (!user) return false;
+  return isEmailAllowed(user.email || "");
+}
+
 function toNiceDate(dtLike) {
   if (!dtLike) return "—";
   try {
-    // dtLike can be ISO string or a Firestore Timestamp-like object
     if (typeof dtLike === "string") {
       const d = new Date(dtLike);
       if (isNaN(d.getTime())) return "—";
@@ -113,85 +143,47 @@ function platformsLabel(platforms) {
   return out || "—";
 }
 
-function normalizeLower(s = "") {
-  return String(s).trim().toLowerCase();
-}
-
-function isEmailAllowed(email) {
-  const e = normalizeLower(email);
-  if (!e) return false;
-
-  for (const raw of ALLOWED_EMAILS) {
-    const rule = normalizeLower(raw);
-    if (!rule) continue;
-
-    // Regola: email completa (es. "nome@dominio.com")
-    if (rule.includes("@")) {
-      if (e === rule) return true;
-      continue;
-    }
-
-    // Regola: dominio (es. "dominio.com" oppure "@dominio.com")
-    const domain = rule.startsWith("@") ? rule.slice(1) : rule;
-    if (e.endsWith(`@${domain}`) || e === domain) return true;
-  }
-
-  return false;
-}
-
-function requireAuth(user) {
-  if (!user) return false;
-  return isEmailAllowed(user.email || "");
-}
-
 function setAuthBusy(isBusy) {
   btnLogin.disabled = !!isBusy;
   btnLogin.style.opacity = isBusy ? "0.8" : "";
   btnLogin.style.pointerEvents = isBusy ? "none" : "";
 }
 
-function shouldFallbackToRedirect(err) {
+function firebaseHint(err) {
   const code = normalizeLower(err?.code || "");
   const msg = normalizeLower(err?.message || "");
 
-  if (code === "popup-timeout") return true;
+  if (code.includes("permission-denied") || msg.includes("missing or insufficient permissions")) {
+    return "Permessi Firestore: in Firebase Console → Firestore → Rules, consenti read/write agli utenti autorizzati.";
+  }
 
-  const popupCodes = new Set([
-    "auth/popup-blocked",
-    "auth/popup-closed-by-user",
-    "auth/cancelled-popup-request",
-    "auth/operation-not-supported-in-this-environment"
-  ]);
+  // Firestore non creato / database default mancante
+  if (
+    code.includes("not-found") ||
+    msg.includes("database") && msg.includes("does not exist") ||
+    msg.includes("not found") && msg.includes("databases")
+  ) {
+    return "Firestore non è stato creato: Firebase Console → Build → Firestore Database → Create database (Production mode).";
+  }
 
-  if (popupCodes.has(code)) return true;
-
-  // Alcuni browser su GitHub Pages bloccano il controllo popup.closed/window.close per COOP.
-  if (msg.includes("cross-origin-opener-policy")) return true;
-  if (msg.includes("window.close") || msg.includes("window.closed")) return true;
-
-  return false;
+  return "";
 }
 
-function promiseWithTimeout(promise, ms) {
-  return new Promise((resolve, reject) => {
-    const t = setTimeout(() => {
-      const e = new Error("POPUP_TIMEOUT");
-      e.code = "popup-timeout";
-      reject(e);
-    }, ms);
-
-    promise
-      .then((v) => {
-        clearTimeout(t);
-        resolve(v);
-      })
-      .catch((e) => {
-        clearTimeout(t);
-        reject(e);
-      });
-  });
+function showTableError(title, err) {
+  const hint = firebaseHint(err);
+  const detail = err?.message ? escapeHtml(String(err.message)) : "";
+  rows.innerHTML = `
+    <tr>
+      <td colspan="5" style="padding:14px">
+        <div class="small" style="color:#b42318">${escapeHtml(title)}</div>
+        ${hint ? `<div class="small" style="margin-top:6px">${escapeHtml(hint)}</div>` : ""}
+        ${detail ? `<div class="small" style="margin-top:6px" class="mono">${detail}</div>` : ""}
+      </td>
+    </tr>
+  `;
 }
 
+// ---- AUTH (Redirect-only su GitHub Pages → evita warning/rotture COOP del popup)
 async function loginGoogle() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
@@ -200,61 +192,38 @@ async function loginGoogle() {
   setAuthBusy(true);
 
   try {
-    // Popup first: UX migliore.
-    // Su GitHub Pages alcuni browser possono bloccare window.close/closed (COOP) → fallback redirect.
-    await promiseWithTimeout(signInWithPopup(auth, provider), 7000);
-    // Se va a buon fine, onAuthStateChanged aggiorna la UI.
+    await signInWithRedirect(auth, provider);
   } catch (err) {
+    console.error("Login redirect error:", err);
     const code = normalizeLower(err?.code || "");
-
     if (code === "auth/unauthorized-domain") {
-      setAuthBusy(false);
       authChip.textContent = "Dominio non autorizzato";
       alert(
         "Dominio non autorizzato su Firebase Auth.\n\n" +
-          "Vai in Firebase Console → Authentication → Settings → Authorized domains e aggiungi:\n" +
-          "- generalcopper.github.io"
+        "Vai in Firebase Console → Authentication → Settings → Authorized domains e aggiungi:\n" +
+        "- generalcopper.github.io"
       );
-      throw err;
-    }
-
-    if (shouldFallbackToRedirect(err)) {
-      authChip.textContent = "Reindirizzamento per accesso…";
-      // Innesca redirect: la pagina si ricarica e poi getRedirectResult() chiude il cerchio.
-      await signInWithRedirect(auth, provider);
       return;
     }
-
-    console.error("Login error:", err);
     authChip.textContent = "Errore accesso";
     alert("Accesso non riuscito. Riprova.");
-    throw err;
   } finally {
-    // Se è andata in redirect la pagina cambierà; se è andata bene/persa, riabilitiamo il bottone.
     setAuthBusy(false);
   }
 }
 
-// ---- auth
 btnLogin.addEventListener("click", loginGoogle);
 
 btnLogout.addEventListener("click", async () => {
   await signOut(auth);
 });
 
-// Gestione ritorno da signInWithRedirect()
+// Chiude il cerchio dopo redirect
 (async () => {
   try {
     await getRedirectResult(auth);
-    // onAuthStateChanged gestisce il resto.
   } catch (err) {
-    const code = normalizeLower(err?.code || "");
-    if (code === "auth/unauthorized-domain") {
-      authChip.textContent = "Dominio non autorizzato";
-      console.error(err);
-    } else if (code) {
-      console.error("Redirect result error:", err);
-    }
+    console.error("getRedirectResult error:", err);
   }
 })();
 
@@ -283,7 +252,12 @@ onAuthStateChanged(auth, async (user) => {
   appWrap.classList.remove("hidden");
   uidBadge.textContent = user.uid;
 
-  await refreshTable();
+  try {
+    await refreshTable();
+  } catch (err) {
+    console.error("refreshTable error:", err);
+    showTableError("Impossibile caricare la coda (Firestore)", err);
+  }
 });
 
 // ---- actions
@@ -344,23 +318,31 @@ btnSave.addEventListener("click", async () => {
     lastError: ""
   };
 
-  await addDoc(collection(db, "socialJobs"), docData);
-  await refreshTable();
+  try {
+    await addDoc(collection(db, "socialJobs"), docData);
+    await refreshTable();
+  } catch (err) {
+    console.error("save error:", err);
+    const hint = firebaseHint(err);
+    alert("Salvataggio non riuscito.\n" + (hint ? `\n${hint}` : ""));
+  }
 });
 
-btnRefresh.addEventListener("click", refreshTable);
+btnRefresh.addEventListener("click", async () => {
+  try {
+    await refreshTable();
+  } catch (err) {
+    console.error("refresh error:", err);
+    showTableError("Impossibile caricare la coda (Firestore)", err);
+  }
+});
 
 // ---- table rendering
 async function refreshTable() {
   const user = auth.currentUser;
   if (!requireAuth(user)) return;
 
-  const q = query(
-    collection(db, "socialJobs"),
-    orderBy("createdAt", "desc"),
-    limit(50)
-  );
-
+  const q = query(collection(db, "socialJobs"), orderBy("createdAt", "desc"), limit(50));
   const snap = await getDocs(q);
 
   const items = [];
@@ -368,7 +350,6 @@ async function refreshTable() {
 
   rows.innerHTML = items.map(renderRow).join("");
 
-  // bind row buttons
   items.forEach((it) => {
     const btnApprove = document.querySelector(`[data-approve="${it.id}"]`);
     const btnQueue = document.querySelector(`[data-queue="${it.id}"]`);
@@ -419,23 +400,33 @@ async function setStatus(id, status) {
   const user = auth.currentUser;
   if (!requireAuth(user)) return;
 
-  await updateDoc(doc(db, "socialJobs", id), {
-    status,
-    updatedAt: serverTimestamp(),
-    lastError: ""
-  });
-
-  await refreshTable();
+  try {
+    await updateDoc(doc(db, "socialJobs", id), {
+      status,
+      updatedAt: serverTimestamp(),
+      lastError: ""
+    });
+    await refreshTable();
+  } catch (err) {
+    console.error("setStatus error:", err);
+    const hint = firebaseHint(err);
+    alert("Operazione non riuscita.\n" + (hint ? `\n${hint}` : ""));
+  }
 }
 
 async function softDelete(id) {
   const user = auth.currentUser;
   if (!requireAuth(user)) return;
 
-  await updateDoc(doc(db, "socialJobs", id), {
-    status: "deleted",
-    updatedAt: serverTimestamp()
-  });
-
-  await refreshTable();
+  try {
+    await updateDoc(doc(db, "socialJobs", id), {
+      status: "deleted",
+      updatedAt: serverTimestamp()
+    });
+    await refreshTable();
+  } catch (err) {
+    console.error("delete error:", err);
+    const hint = firebaseHint(err);
+    alert("Operazione non riuscita.\n" + (hint ? `\n${hint}` : ""));
+  }
 }
