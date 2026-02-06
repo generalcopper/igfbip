@@ -211,10 +211,9 @@ async function loginGoogle() {
       setAuthBusy(false);
       authChip.textContent = "Dominio non autorizzato";
       alert(
-        "Dominio non autorizzato su Firebase Auth.
-
-Vai in Firebase Console → Authentication → Settings → Authorized domains e aggiungi:
-- generalcopper.github.io"
+        "Dominio non autorizzato su Firebase Auth.\n\n" +
+          "Vai in Firebase Console → Authentication → Settings → Authorized domains e aggiungi:\n" +
+          "- generalcopper.github.io"
       );
       throw err;
     }
