@@ -1,0 +1,4 @@
+.DS_Store
+.firebase/
+.secrets/
+node_modules/
