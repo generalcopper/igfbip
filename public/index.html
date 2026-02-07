@@ -230,22 +230,6 @@
     }
     .panelBody{ padding:10px 12px 12px; }
     .pre{ white-space:pre-wrap; font-size:13px; font-weight:560; color:rgba(15,23,42,.82); line-height:1.5; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; font-weight:560; color:rgba(15,23,42,.74); }
-
-    .mediaGrid{ display:grid; gap:10px; }
-    .media{
-      width:100%;
-      border-radius:14px;
-      border:1px solid rgba(15,23,42,.08);
-      display:block;
-      background:#fff;
-    }
-    .mediaLabel{
-      font-size:12px;
-      font-weight:650;
-      color:rgba(15,23,42,.62);
-      margin-top:6px;
-    }
 
     .skeleton{
       width:100%;
@@ -259,6 +243,43 @@
     @keyframes shimmer{
       0%{ background-position:200% 0; }
       100%{ background-position:-200% 0; }
+    }
+
+    .carouselGrid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+    .slide{
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:14px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .slide img, .slide video{
+      width:100%;
+      display:block;
+      background:#fff;
+    }
+    .slideMeta{
+      padding:8px 10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      border-top:1px solid rgba(15,23,42,.06);
+      background:rgba(15,23,42,.02);
+    }
+    .slideLabel{
+      font-size:12px;
+      font-weight:650;
+      color:rgba(15,23,42,.62);
+    }
+    .slideHint{
+      font-size:12px;
+      font-weight:650;
+      color:rgba(15,23,42,.50);
+      white-space:nowrap;
     }
 
     .toast{
@@ -287,7 +308,7 @@
         <img class="brandLogo" src="https://www.ilovepaghe.com/ilovepaghe_logobluvsblack.png" alt="iLovePaghe" onerror="this.style.display='none'" />
         <div class="brandText">
           <h1>Content Studio</h1>
-          <p>1 click: Post → testo + grafica • Reel → testo + cover + video</p>
+          <p>Post → carosello serio • Reel → cover + video</p>
         </div>
       </div>
 
@@ -314,24 +335,22 @@
       <div class="grid">
         <div class="field">
           <div class="label">Idea / angolo (opzionale)</div>
-          <textarea id="brief" class="textarea" placeholder="Esempi:&#10;• Perché inviare cedolini via email senza errori&#10;• Demo iLovePaghe: come funziona in 30 secondi&#10;• Caso reale: da caos a ordine con un processo pulito"></textarea>
-          <div class="note">Per includere il logo nella grafica, scrivi <strong>con logo</strong> nel brief.</div>
+          <textarea id="brief" class="textarea" placeholder="Esempi:&#10;• Demo iLovePaghe: come funziona in 30 secondi&#10;• Da PDF unico a invii singoli senza errori&#10;• Privacy e controllo: invio cedolini in modo ordinato"></textarea>
+          <div class="note">Per includere il logo nelle slide: scrivi <strong>con logo</strong> nel brief.</div>
         </div>
 
         <div class="out">
-          <div class="panel" id="panelText">
+          <div class="panel">
             <div class="panelHead"><div class="panelTitle">Testo</div></div>
             <div class="panelBody">
               <div class="pre" id="textOut">Scrivi un’idea (opzionale) e clicca Genera.</div>
             </div>
           </div>
 
-          <div class="panel" id="panelMedia">
+          <div class="panel">
             <div class="panelHead"><div class="panelTitle">Media</div></div>
             <div class="panelBody">
-              <div class="mediaGrid" id="mediaOut">
-                <div class="pre">Qui compariranno la grafica (e il video in modalità Reel).</div>
-              </div>
+              <div id="mediaOut" class="pre">Qui compariranno le slide del carosello (Post) o cover+video (Reel).</div>
             </div>
           </div>
         </div>
@@ -350,6 +369,7 @@
       const EP_CONTENT = "/api/content/generate";
       const EP_IMAGE = "/api/image/generate";
       const EP_VIDEO = "/api/video/generate";
+      const EP_CAROUSEL = "/api/carousel/generate";
 
       const $ = (s, r=document) => r.querySelector(s);
 
@@ -379,15 +399,6 @@
         el.textContent = text;
         el.classList.remove("good","warn","bad");
         if(kind) el.classList.add(kind);
-      }
-
-      function escapeHtml(str){
-        return String(str ?? "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
       }
 
       async function copy(text){
@@ -482,41 +493,66 @@
         el.textContent = lines.join("\n").trim();
       }
 
-      function renderMediaPlaceholder(label){
+      function wantsLogo(brief){
+        const b = (brief || "").toLowerCase();
+        return /\bcon\s+logo\b/.test(b) || /\[logo\]/.test(b) || /#logo\b/.test(b) || /\+logo\b/.test(b);
+      }
+
+      function renderMediaLoading(label){
         const media = $("#mediaOut");
-        if(!media) return;
         media.innerHTML = `
           <div class="skeleton" aria-hidden="true"></div>
-          <div class="mediaLabel">${escapeHtml(label || "In generazione…")}</div>
+          <div class="slideMeta"><div class="slideLabel">${label || "In generazione…"}</div><div class="slideHint">attendi</div></div>
         `;
       }
 
-      function renderMedia(imageUrl, imageLabel, videoUrl){
+      function renderCarousel(slides, aspectRatio){
         const media = $("#mediaOut");
-        if(!media) return;
-
-        const parts = [];
-        if(imageUrl){
-          parts.push(`<img class="media" src="${imageUrl}" alt="${escapeHtml(imageLabel || "Grafica generata")}" />`);
-          parts.push(`<div class="mediaLabel">${escapeHtml(imageLabel || "Grafica")}</div>`);
+        if(!slides || !slides.length){
+          media.textContent = "Nessun media generato.";
+          return;
         }
 
-        if(videoUrl){
-          parts.push(`<video class="media" controls playsinline src="${videoUrl}"></video>`);
-          parts.push(`<div class="mediaLabel">Video Reel (9:16)</div>`);
-        }
+        const items = slides.map((s, i) => {
+          const url = "data:" + (s.mimeType || "image/png") + ";base64," + s.imageBase64;
+          const label = `Slide ${i+1}/${slides.length}`;
+          const hint = aspectRatio ? aspectRatio : "carosello";
+          return `
+            <div class="slide">
+              <img src="${url}" alt="${label}" />
+              <div class="slideMeta">
+                <div class="slideLabel">${label}</div>
+                <div class="slideHint">${hint}</div>
+              </div>
+            </div>
+          `;
+        }).join("");
 
-        if(!parts.length){
-          parts.push(`<div class="pre">Nessun media generato.</div>`);
-        }
-
-        media.innerHTML = parts.join("");
+        media.innerHTML = `<div class="carouselGrid">${items}</div>`;
       }
 
-      function wantsLogo(brief){
-        const b = (brief || "").toLowerCase();
-        // trigger volutamente esplicito, niente falsi positivi
-        return /\bcon\s+logo\b/.test(b) || /\[logo\]/.test(b) || /#logo\b/.test(b) || /\+logo\b/.test(b);
+      function renderReelMedia(coverBase64, coverMime, videoUrl){
+        const media = $("#mediaOut");
+        const coverUrl = coverBase64 ? ("data:" + (coverMime || "image/png") + ";base64," + coverBase64) : null;
+
+        const parts = [];
+        if(coverUrl){
+          parts.push(`
+            <div class="slide">
+              <img src="${coverUrl}" alt="Cover Reel" />
+              <div class="slideMeta"><div class="slideLabel">Cover</div><div class="slideHint">9:16</div></div>
+            </div>
+          `);
+        }
+        if(videoUrl){
+          parts.push(`
+            <div class="slide">
+              <video controls playsinline src="${videoUrl}"></video>
+              <div class="slideMeta"><div class="slideLabel">Video</div><div class="slideHint">9:16</div></div>
+            </div>
+          `);
+        }
+        media.innerHTML = `<div class="carouselGrid">${parts.join("")}</div>`;
       }
 
       async function onGenerate(){
@@ -531,9 +567,9 @@
         setLoading(true);
         try{
           $("#textOut").textContent = "Generazione testo…";
-          $("#mediaOut").innerHTML = `<div class="pre">In attesa…</div>`;
+          $("#mediaOut").textContent = "In attesa…";
 
-          // 1) testo
+          // 1) testo (sempre)
           const content = await fetchJSON(API_BASE + EP_CONTENT, {
             method: "POST",
             headers: { "content-type": "application/json" },
@@ -547,26 +583,33 @@
 
           renderText(blocks);
 
-          // 2) immagine
-          const aspectRatio = (mode === "reel") ? "9:16" : "1:1";
-          renderMediaPlaceholder("Grafica (in generazione…)");
+          // 2) MEDIA
+          if(mode === "post"){
+            renderMediaLoading("Carosello (in generazione…)");
 
-          const img = await fetchJSON(API_BASE + EP_IMAGE, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ mode, brief, aspectRatio, includeLogo })
-          });
+            const car = await fetchJSON(API_BASE + EP_CAROUSEL, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ brief, includeLogo, format: "carousel", size: "1080x1350" })
+            });
 
-          const imgUrl = img?.imageBase64
-            ? ("data:" + (img.mimeType || "image/png") + ";base64," + img.imageBase64)
-            : null;
+            if(!car?.slides?.length) throw new Error("Carosello non generato.");
+            renderCarousel(car.slides, car.size || "1080x1350");
 
-          const label = includeLogo ? `Grafica con logo (${aspectRatio})` : `Grafica (${aspectRatio})`;
-          renderMedia(imgUrl, label, null);
+          } else {
+            // Reel: cover + video
+            renderMediaLoading("Cover Reel (in generazione…)");
 
-          // 3) video (solo Reel)
-          if(mode === "reel"){
-            renderMediaPlaceholder("Video (in generazione…)");
+            const img = await fetchJSON(API_BASE + EP_IMAGE, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ mode, brief, aspectRatio: "9:16", includeLogo })
+            });
+
+            const coverBase64 = img?.imageBase64 || null;
+            renderReelMedia(coverBase64, img?.mimeType, null);
+
+            renderMediaLoading("Video Reel (in generazione…)");
 
             const blob = await fetchBlob(API_BASE + EP_VIDEO, {
               method: "POST",
@@ -576,8 +619,7 @@
 
             const vUrl = URL.createObjectURL(blob);
             lastVideoObjectUrl = vUrl;
-
-            renderMedia(imgUrl, "Cover (9:16)", vUrl);
+            renderReelMedia(coverBase64, img?.mimeType, vUrl);
           }
 
           toast("Generato");
