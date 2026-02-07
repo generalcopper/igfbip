@@ -5,1250 +5,387 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#1c6fe6" />
 
-  <title>Social Automation | iLovePaghe</title>
+  <title>Content Studio | iLovePaghe</title>
   <meta name="robots" content="noindex,nofollow" />
-
-  <script id="__CANONICAL_HTML_SLASH__">
-  (function(){
-    try{
-      const u = new URL(location.href);
-      if(u.pathname.endsWith(".html/")){
-        u.pathname = u.pathname.slice(0, -1);
-        location.replace(u.toString());
-      }
-    }catch(_e){}
-  })();
-  </script>
 
   <style>
     :root{
       --bg:#f6f7f8;
-      --bg-soft:#ffffff;
-      --surface:#ffffff;
-      --stroke:rgba(15,23,42,.12);
-      --stroke-strong:rgba(15,23,42,.18);
-      --text:#1f2937;
-      --muted:rgba(15,23,42,.68);
+      --card:#ffffff;
+      --stroke:rgba(15,23,42,.10);
+      --text:rgba(15,23,42,.92);
+      --muted:rgba(15,23,42,.62);
       --accent:#1c6fe6;
-      --accent-dark:#0a5bd6;
       --accent-soft:rgba(28,111,230,.10);
-      --glass:rgba(255,255,255,0.9);
-      --good:#34c759;
-      --warn:#ff9f0a;
-      --bad:#ff3b30;
-      --shadow-soft:0 12px 32px rgba(15,23,42,.08),0 2px 12px rgba(15,23,42,.06);
-      --radius-lg:24px;
-      --radius-md:18px;
-      --header-height:clamp(56px,9vw,60px);
+      --shadow:0 16px 44px rgba(15,23,42,.06);
+      --r-lg:22px;
+      --r-md:16px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bot: env(safe-area-inset-bottom, 0px);
-      --safe-left: env(safe-area-inset-left, 0px);
-      --safe-right: env(safe-area-inset-right, 0px);
       --focus:0 0 0 3px rgba(28,111,230,.18),0 0 0 6px rgba(28,111,230,.08);
     }
-
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     html,body{
       margin:0;
       min-height:100%;
       font-family: ui-sans-serif,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Helvetica,Arial,sans-serif;
-      color:var(--text);
-      line-height:1.55;
-      letter-spacing:-0.01em;
       background:var(--bg);
-      overflow-x:hidden;
+      color:var(--text);
+      letter-spacing:-0.01em;
+      line-height:1.55;
     }
-    a{ color:inherit; }
     :focus-visible{ outline:none; box-shadow:var(--focus); border-radius:12px; }
-
-    input[type="file"]{
-      display:none !important;
-      visibility:hidden;
-    }
-
-    .pageShell{
-      display:flex;
-      flex-direction:column;
-      min-height:100dvh;
-      padding-top:calc(var(--header-height) + var(--safe-top));
-    }
 
     .wrap{
       width:100%;
-      margin:0;
-      padding:0 0 calc(96px + var(--safe-bot));
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      flex:1;
-    }
-
-    /* ===== Footer (come base) ===== */
-    .appFooter{
-      border-top:1px solid rgba(15,23,42,.08);
-      background:#ffffff;
-      box-shadow:0 -20px 60px rgba(15,23,42,.04);
-      padding:12px 0 calc(10px + var(--safe-bot));
-      margin-top:auto;
-      font-size:11px;
-      line-height:1.35;
-    }
-    .footerInner{
-      width:100%;
       max-width:1100px;
       margin:0 auto;
-      padding:0 clamp(18px,4vw,40px);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+      padding:calc(20px + var(--safe-top)) clamp(16px,4vw,34px) calc(80px + var(--safe-bot));
+      display:grid;
       gap:14px;
     }
-    .footerMini{
-      font-weight:500;
-      color:rgba(15,23,42,.55);
-    }
-    .footerRight{
-      display:flex;
-      align-items:center;
-      gap:16px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .footerLinks{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-    .footerLink{
-      font-size:11px;
-      color:rgba(15,23,42,.6);
-      font-weight:500;
-      text-decoration:none;
-      white-space:nowrap;
-    }
-    .footerLink:hover{ text-decoration:underline; }
-    .footerMail{
-      color:inherit;
-      font-weight:inherit;
-      text-decoration:none;
-      white-space:nowrap;
-    }
-    .footerMail:hover{ text-decoration:underline; }
 
-    /* ===== Social Automation ===== */
-    .saContainer{
-      width:100%;
-      max-width:1180px;
-      margin:0 auto;
-      padding:0 clamp(18px,4vw,40px);
-    }
-
-    .saTop{
-      padding:16px 0 6px;
-    }
-
-    .saTopBar{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius:22px;
+    .top{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:var(--r-lg);
+      box-shadow:var(--shadow);
       padding:14px 14px 12px;
       display:flex;
-      flex-wrap:wrap;
-      gap:10px 12px;
       align-items:center;
       justify-content:space-between;
-      box-shadow:0 18px 44px rgba(15,23,42,.06);
+      gap:10px 12px;
+      flex-wrap:wrap;
     }
-
-    .saTopLeft{
+    .title{
       display:flex;
-      align-items:center;
-      gap:12px;
+      flex-direction:column;
+      gap:2px;
       min-width:0;
     }
-    .saTitle{
+    .title h1{
+      margin:0;
       font-size:16px;
-      font-weight:600;
+      font-weight:700;
       letter-spacing:-0.02em;
-      color:rgba(15,23,42,.92);
       white-space:nowrap;
     }
-    .saStatus{
-      display:inline-flex;
-      align-items:center;
+    .title p{
+      margin:0;
+      font-size:12px;
+      font-weight:560;
+      color:var(--muted);
+      max-width:min(70ch, 90vw);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .mode{
+      display:flex;
       gap:8px;
-      padding:6px 10px;
-      border-radius:999px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .pill{
       border:1px solid rgba(15,23,42,.12);
       background:rgba(15,23,42,.03);
-      font-size:12px;
-      color:rgba(15,23,42,.72);
-      font-weight:500;
-      white-space:nowrap;
-    }
-    .saDot{
-      width:9px;
-      height:9px;
       border-radius:999px;
-      background:var(--warn);
-      box-shadow:0 0 0 4px rgba(255,159,10,.14);
-      flex:0 0 auto;
-    }
-    .saDot.ok{ background:var(--good); box-shadow:0 0 0 4px rgba(52,199,89,.14); }
-    .saDot.bad{ background:var(--bad); box-shadow:0 0 0 4px rgba(255,59,48,.14); }
-
-    .saTopRight{
-      display:flex;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:flex-end;
-      gap:10px;
-      min-width:min(560px,100%);
-    }
-
-    .saEndpoint{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      min-width:min(380px,100%);
-      flex:1 1 280px;
-    }
-    .saMiniLabel{
+      padding:8px 12px;
       font-size:12px;
-      font-weight:500;
-      color:rgba(15,23,42,.62);
+      font-weight:750;
+      color:rgba(15,23,42,.70);
+      cursor:pointer;
+      user-select:none;
+      transition:transform .16s cubic-bezier(.22,.61,.36,1), background .14s ease, border-color .14s ease;
       white-space:nowrap;
     }
-
-    .saInput, .saSelect, .saTextarea{
-      width:100%;
-      border:1px solid rgba(15,23,42,.12);
-      border-radius:14px;
-      background:#fff;
-      padding:10px 12px;
-      font-size:13px;
-      color:rgba(12,16,26,.92);
-      outline:none;
-      box-shadow:none;
-      transition:border-color .15s ease;
-    }
-    .saInput::placeholder, .saTextarea::placeholder{ color:rgba(15,23,42,.45); }
-    .saInput:focus, .saSelect:focus, .saTextarea:focus{
-      border-color:rgba(28,111,230,.35);
-      box-shadow:var(--focus);
-    }
-    .saEndpoint .saInput{
-      padding:10px 12px;
-      font-size:13px;
+    .pill:active{ transform:translateY(1px) scale(.99); }
+    .pill.active{
+      background:var(--accent-soft);
+      border-color:rgba(28,111,230,.22);
+      color:rgba(18,74,164,.94);
     }
 
-    .saBtns{
+    .actions{
       display:flex;
-      flex-wrap:wrap;
       gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
       justify-content:flex-end;
+      flex:1 1 auto;
     }
-
-    .saBtn{
+    .btn{
       border:1px solid rgba(15,23,42,.14);
       background:#fff;
       border-radius:14px;
       padding:10px 12px;
+      font-size:13px;
+      font-weight:750;
+      color:rgba(15,23,42,.90);
+      cursor:pointer;
+      user-select:none;
+      min-height:40px;
       display:inline-flex;
       align-items:center;
-      justify-content:center;
       gap:8px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:13px;
-      color:rgba(12,16,26,.92);
-      box-shadow:none;
-      transition:transform .16s cubic-bezier(.22,.61,.36,1),opacity .14s ease,border-color .14s ease;
-      min-height:40px;
+      transition:transform .16s cubic-bezier(.22,.61,.36,1), opacity .14s ease;
       white-space:nowrap;
-      user-select:none;
     }
-    .saBtn:active{ transform:translateY(1px) scale(.99); opacity:.92; }
-    .saBtn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
-    .saBtn.primary{
+    .btn:active{ transform:translateY(1px) scale(.99); opacity:.92; }
+    .btn.primary{
       background:var(--accent);
       border-color:var(--accent);
       color:#fff;
     }
-    .saBtn.ghost{
-      background:rgba(15,23,42,.03);
-    }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
 
-    .saSpinner{
-      width:14px;
-      height:14px;
+    .spinner{
+      width:14px; height:14px;
       border-radius:999px;
       border:2px solid rgba(255,255,255,.45);
       border-top-color:#fff;
-      animation:saSpin .9s linear infinite;
       display:none;
+      animation:spin .9s linear infinite;
     }
-    .saBtn:not(.primary) .saSpinner{
+    .btn:not(.primary) .spinner{
       border:2px solid rgba(15,23,42,.18);
       border-top-color:rgba(15,23,42,.62);
     }
-    .saBtn.loading .saSpinner{ display:inline-block; }
-    .saBtn.loading .saBtnText{ opacity:.9; }
+    .btn.loading .spinner{ display:inline-block; }
+    @keyframes spin{ to{ transform:rotate(360deg);} }
 
-    @keyframes saSpin{ to{ transform:rotate(360deg);} }
-
-    .saMsg{
-      flex-basis:100%;
-      display:none;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(15,23,42,.10);
-      background:rgba(15,23,42,.03);
-      color:rgba(15,23,42,.72);
-      font-size:13px;
-      font-weight:500;
-    }
-    .saMsg.good{
-      background:rgba(52,199,89,.10);
-      border-color:rgba(52,199,89,.18);
-      color:rgba(24,140,70,.92);
-    }
-    .saMsg.warn{
-      background:rgba(255,159,10,.10);
-      border-color:rgba(255,159,10,.18);
-      color:rgba(155,96,0,.94);
-    }
-    .saMsg.bad{
-      background:rgba(255,59,48,.10);
-      border-color:rgba(255,59,48,.18);
-      color:rgba(160,30,24,.94);
-    }
-
-    .saAssetsRow{
-      margin-top:10px;
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-    }
-
-    .saCard{
-      background:#fff;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius:22px;
-      box-shadow:0 18px 44px rgba(15,23,42,.06);
+    .card{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:var(--r-lg);
+      box-shadow:var(--shadow);
       overflow:hidden;
     }
-    .saCardHeader{
+    .cardHead{
       padding:14px 14px 10px;
       border-bottom:1px solid rgba(15,23,42,.06);
       display:flex;
-      align-items:flex-end;
       justify-content:space-between;
-      gap:12px;
+      align-items:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
     }
-    .saCardTitle{
+    .cardHead .h{
       font-size:14px;
-      font-weight:600;
-      color:rgba(15,23,42,.92);
-      letter-spacing:-0.01em;
+      font-weight:750;
+      margin:0;
     }
-    .saCardHint{
-      margin-top:6px;
+    .status{
       font-size:12px;
-      font-weight:500;
-      color:rgba(15,23,42,.62);
+      font-weight:650;
+      color:rgba(15,23,42,.58);
+      padding:6px 10px;
+      border:1px solid rgba(15,23,42,.10);
+      background:rgba(15,23,42,.03);
+      border-radius:999px;
+      white-space:nowrap;
     }
+    .status.good{ background:rgba(52,199,89,.12); border-color:rgba(52,199,89,.18); color:rgba(24,140,70,.92); }
+    .status.warn{ background:rgba(255,159,10,.14); border-color:rgba(255,159,10,.18); color:rgba(155,96,0,.94); }
 
-    .saBody{ padding:10px 0 0; }
-
-    .saGrid{
-      display:grid;
-      grid-template-columns:minmax(0,1fr);
-      gap:14px;
-    }
-
-    .saForm{
-      padding:14px;
-      display:grid;
-      gap:12px;
-    }
-
-    .saRow{
+    .grid{
       display:grid;
       grid-template-columns:1fr;
-      gap:12px;
-      align-items:start;
-    }
-
-    .saField{ display:grid; gap:6px; }
-    .saLabel{
-      font-size:12px;
-      font-weight:600;
-      color:rgba(15,23,42,.72);
-    }
-
-    .saChecks{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      padding-top:4px;
-    }
-    .saCheck{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      font-size:13px;
-      font-weight:500;
-      color:rgba(15,23,42,.78);
-      user-select:none;
-    }
-    .saCheck input{
-      width:16px;
-      height:16px;
-      accent-color:var(--accent);
-    }
-
-    .saLabelRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .saCounter{
-      font-size:12px;
-      font-weight:600;
-      color:rgba(15,23,42,.55);
-      padding:4px 8px;
-      border-radius:999px;
-      border:1px solid rgba(15,23,42,.10);
-      background:rgba(15,23,42,.03);
-      min-width:56px;
-      text-align:center;
-    }
-
-    .saTextarea{
-      resize:vertical;
-      min-height:110px;
-      line-height:1.45;
-    }
-
-    .saUpload{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .saFileMeta{
-      font-size:12px;
-      font-weight:500;
-      color:rgba(15,23,42,.62);
-      min-width:160px;
-    }
-
-    .saError{
-      display:block;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,59,48,.18);
-      background:rgba(255,59,48,.10);
-      color:rgba(160,30,24,.94);
-      font-size:13px;
-      font-weight:500;
-    }
-
-    .saActions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-      padding-top:2px;
-    }
-
-    .saNote{
-      font-size:12px;
-      font-weight:500;
-      color:rgba(15,23,42,.55);
-    }
-
-    .saPreview{
+      gap:14px;
       padding:14px;
+    }
+    @media (min-width: 920px){
+      .grid{ grid-template-columns: .95fr 1.05fr; }
+    }
+
+    .field{ display:grid; gap:8px; }
+    .label{
+      font-size:12px;
+      font-weight:750;
+      color:rgba(15,23,42,.70);
+    }
+    .input, .textarea{
+      width:100%;
+      border:1px solid rgba(15,23,42,.12);
+      border-radius:14px;
+      background:#fff;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:560;
+      color:rgba(15,23,42,.86);
+      outline:none;
+    }
+    .input::placeholder, .textarea::placeholder{ color:rgba(15,23,42,.45); }
+    .input:focus, .textarea:focus{ border-color:rgba(28,111,230,.35); box-shadow:var(--focus); }
+    .textarea{ min-height:120px; resize:vertical; }
+
+    .note{
+      font-size:12px;
+      font-weight:560;
+      color:rgba(15,23,42,.58);
+    }
+
+    .out{
       display:grid;
       gap:12px;
     }
-    .saPreviewMedia{
+    .block{
       border:1px solid rgba(15,23,42,.10);
       border-radius:18px;
-      background:rgba(15,23,42,.03);
       overflow:hidden;
-      min-height:180px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:10px;
-    }
-    .saPreviewMedia img, .saPreviewMedia video{
-      max-width:100%;
-      max-height:320px;
-      width:auto;
-      height:auto;
-      border-radius:12px;
-      background:#000;
-    }
-    .saPreviewPlaceholder{
-      font-size:12px;
-      font-weight:600;
-      color:rgba(15,23,42,.50);
-    }
-    .saPreviewText{
-      border:1px solid rgba(15,23,42,.10);
-      border-radius:18px;
       background:#fff;
-      padding:12px 12px;
-      font-size:13px;
-      font-weight:500;
-      color:rgba(15,23,42,.78);
-      white-space:pre-wrap;
-      line-height:1.5;
-      min-height:66px;
     }
-
-    /* Queue card layout */
-    .saCardTall{
-      display:flex;
-      flex-direction:column;
-      min-height:520px;
-    }
-    .saTableWrap{
-      position:relative;
-      flex:1;
-      overflow:auto;
-    }
-    .saEmpty{
-      display:none;
-      padding:16px 14px;
-      color:rgba(15,23,42,.60);
-      font-size:13px;
-      font-weight:500;
-    }
-
-    .saTable{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      font-size:13px;
-    }
-    .saTable thead th{
-      position:sticky;
-      top:0;
-      z-index:2;
-      background:#fff;
-      border-bottom:1px solid rgba(15,23,42,.08);
-      padding:10px 12px;
-      font-size:12px;
-      letter-spacing:.02em;
-      color:rgba(15,23,42,.60);
-      font-weight:600;
-      text-align:left;
-      white-space:nowrap;
-    }
-    .saTable tbody td{
+    .blockHead{
       padding:10px 12px;
       border-bottom:1px solid rgba(15,23,42,.06);
-      vertical-align:middle;
-      color:rgba(15,23,42,.78);
-    }
-    .saTr{
-      cursor:pointer;
-      transition:background .12s ease;
-    }
-    .saTr:hover{ background:rgba(15,23,42,.02); }
-    .saTr.selected{ background:rgba(28,111,230,.06); }
-
-    .saChips{
+      background:rgba(15,23,42,.02);
       display:flex;
-      gap:6px;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
       flex-wrap:wrap;
     }
-    .saChip{
-      padding:5px 9px;
-      border-radius:999px;
-      border:1px solid rgba(15,23,42,.12);
-      background:rgba(15,23,42,.03);
+    .blockTitle{
       font-size:12px;
-      font-weight:600;
-      color:rgba(15,23,42,.66);
-      white-space:nowrap;
+      font-weight:850;
+      letter-spacing:.02em;
+      color:rgba(15,23,42,.70);
+      text-transform:uppercase;
     }
-
-    .saStatusPill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
+    .mini{
       font-size:12px;
-      font-weight:600;
-      white-space:nowrap;
+      font-weight:750;
       border:1px solid rgba(15,23,42,.12);
-      background:rgba(15,23,42,.03);
-      color:rgba(15,23,42,.66);
-    }
-    .saStatusPill.good{
-      background:rgba(52,199,89,.12);
-      border-color:rgba(52,199,89,.18);
-      color:rgba(24,140,70,.92);
-    }
-    .saStatusPill.warn{
-      background:rgba(255,159,10,.14);
-      border-color:rgba(255,159,10,.18);
-      color:rgba(155,96,0,.94);
-    }
-    .saStatusPill.bad{
-      background:rgba(255,59,48,.12);
-      border-color:rgba(255,59,48,.18);
-      color:rgba(160,30,24,.94);
-    }
-    .saPillDot{
-      width:9px;
-      height:9px;
-      border-radius:999px;
-      background:rgba(15,23,42,.40);
-    }
-    .saStatusPill.good .saPillDot{ background:var(--good); }
-    .saStatusPill.warn .saPillDot{ background:var(--warn); }
-    .saStatusPill.bad .saPillDot{ background:var(--bad); }
-
-    .saRowAction{
-      display:flex;
-      justify-content:flex-end;
-    }
-    .saRowBtn{
-      padding:8px 10px;
+      background:#fff;
       border-radius:12px;
-      border:1px solid rgba(15,23,42,.14);
-      background:#fff;
-      font-size:12px;
-      font-weight:700;
-      color:rgba(12,16,26,.92);
+      padding:8px 10px;
       cursor:pointer;
-      min-height:34px;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      transition:transform .16s cubic-bezier(.22,.61,.36,1),opacity .14s ease;
-      white-space:nowrap;
-    }
-    .saRowBtn:active{ transform:translateY(1px) scale(.99); opacity:.92; }
-    .saRowBtn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
-    .saRowBtn .saSpinner{ width:13px; height:13px; }
-
-    .saDetails{
-      border-top:1px solid rgba(15,23,42,.06);
-      padding:12px 14px;
-      background:rgba(15,23,42,.02);
-    }
-    .saDetailsHeader{
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .saDetailsTitle{
-      font-size:13px;
-      font-weight:700;
-      color:rgba(15,23,42,.90);
-    }
-    .saDetailsMeta{
-      font-size:12px;
-      font-weight:600;
-      color:rgba(15,23,42,.55);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .saDetailsError{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,59,48,.18);
-      background:rgba(255,59,48,.10);
-      color:rgba(160,30,24,.94);
-      font-size:13px;
-      font-weight:500;
-    }
-    details.saPayload{
-      margin-top:10px;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius:14px;
-      background:#fff;
-      overflow:hidden;
-    }
-    details.saPayload summary{
-      cursor:pointer;
-      padding:10px 12px;
-      font-size:12px;
-      font-weight:700;
-      color:rgba(15,23,42,.75);
-      list-style:none;
       user-select:none;
+      min-height:34px;
     }
-    details.saPayload summary::-webkit-details-marker{ display:none; }
-    details.saPayload pre{
-      margin:0;
-      padding:10px 12px 12px;
+    .mini:active{ transform:translateY(1px) scale(.99); opacity:.92; }
+    .blockBody{ padding:10px 12px 12px; }
+    .pre{
+      white-space:pre-wrap;
+      font-size:13px;
+      font-weight:560;
+      color:rgba(15,23,42,.82);
+      line-height:1.5;
+    }
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size:12px;
-      line-height:1.45;
-      color:rgba(15,23,42,.78);
-      overflow:auto;
-      max-height:220px;
+      font-weight:560;
+      color:rgba(15,23,42,.74);
     }
 
-    @media (min-width: 900px){
-      .saAssetsRow{ grid-template-columns:1fr 1fr; }
-      .saGrid{ grid-template-columns: 1.05fr .95fr; }
-      .saRow{ grid-template-columns: 1fr 1fr; }
-      .saTopRight{ min-width:560px; }
-      .saCardTall{
-        height:calc(100dvh - var(--header-height) - var(--safe-top) - 210px);
-        min-height:560px;
-      }
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      background:rgba(15,23,42,.92);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+      font-weight:650;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease;
     }
-
-    @media (max-width: 540px){
-      .saTopRight{ justify-content:flex-start; }
-      .saBtns{ justify-content:flex-start; }
-      .saTitle{ font-size:15px; }
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(-2px);
     }
   </style>
 </head>
 
 <body>
-  <div class="pageShell">
-    <!-- Header iLovePaghe (iniettato via JS) -->
-    <script src="/ilovepaghe-header.js?v=20260206_social"></script>
+  <div class="wrap">
+    <div class="top" role="banner" aria-label="Barra Content Studio">
+      <div class="title">
+        <h1>Content Studio</h1>
+        <p id="subTitle">Generatore manuale • prende contesto da ilovepaghe.com</p>
+      </div>
 
-    <div class="wrap">
-      <main id="social-automation" aria-label="Social Automation">
-        <section class="saTop" aria-label="Connessione e comandi">
-          <div class="saContainer">
-            <div class="saTopBar">
-              <div class="saTopLeft">
-                <div class="saTitle">Social Automation</div>
-                <div class="saStatus" aria-live="polite">
-                  <span class="saDot" id="saConnDot"></span>
-                  <span id="saConnText">Non connesso</span>
-                </div>
-              </div>
+      <div class="mode" role="tablist" aria-label="Modalità">
+        <button class="pill active" id="modePost" type="button" role="tab" aria-selected="true">General Post</button>
+        <button class="pill" id="modeReel" type="button" role="tab" aria-selected="false">General Reel</button>
+      </div>
 
-              <div class="saTopRight">
-                <div class="saBtns">
-                  <button class="saBtn primary" id="btnMetaLogin" type="button">
-                    <span class="saSpinner" aria-hidden="true"></span>
-                    <span class="saBtnText">Accedi Meta</span>
-                  </button>
-                  <button class="saBtn" id="btnLoadAssets" type="button">
-                    <span class="saSpinner" aria-hidden="true"></span>
-                    <span class="saBtnText">Ricarica asset</span>
-                  </button>
-                  <button class="saBtn ghost" id="btnRefreshJobs" type="button">
-                    <span class="saSpinner" aria-hidden="true"></span>
-                    <span class="saBtnText">Aggiorna stati</span>
-                  </button>
-                </div>
-              </div>
-
-              <div class="saMsg" id="saTopMsg" role="status" aria-live="polite"></div>
-            </div>
-
-            <div class="saAssetsRow" aria-label="Selezione asset">
-              <div class="saField">
-                <label class="saLabel" for="fbPageSelect">Pagina Facebook</label>
-                <select id="fbPageSelect" class="saSelect">
-                  <option value="">—</option>
-                </select>
-              </div>
-
-              <div class="saField">
-                <label class="saLabel" for="igAccountSelect">Instagram Business</label>
-                <select id="igAccountSelect" class="saSelect">
-                  <option value="">—</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="saBody" aria-label="Creazione e coda">
-          <div class="saContainer">
-            <div class="saGrid">
-              <!-- LEFT -->
-              <div class="saCol">
-                <div class="saCard">
-                  <div class="saCardHeader">
-                    <div>
-                      <div class="saCardTitle">Crea contenuto</div>
-                      <div class="saCardHint">Crea → metti in coda → pubblica o programma.</div>
-                    </div>
-                  </div>
-
-                  <div class="saForm">
-                    <div class="saRow">
-                      <div class="saField">
-                        <label class="saLabel" for="contentType">Tipo</label>
-                        <select id="contentType" class="saSelect">
-                          <option value="post">Post</option>
-                          <option value="reel">Reel</option>
-                          <option value="story">Story</option>
-                        </select>
-                      </div>
-
-                      <div class="saField">
-                        <div class="saLabel">Canali</div>
-                        <div class="saChecks">
-                          <label class="saCheck"><input type="checkbox" id="chIG" checked> Instagram</label>
-                          <label class="saCheck"><input type="checkbox" id="chFB" checked> Facebook</label>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="saField">
-                      <label class="saLabel" for="internalTitle">Titolo interno</label>
-                      <input id="internalTitle" class="saInput" placeholder="Es. Promo febbraio (solo per organizzazione)" />
-                    </div>
-
-                    <div class="saField">
-                      <div class="saLabelRow">
-                        <label class="saLabel" for="caption">Caption</label>
-                        <span class="saCounter" id="captionCounter">0</span>
-                      </div>
-                      <textarea id="caption" class="saTextarea" placeholder="Scrivi la caption..."></textarea>
-                    </div>
-
-                    <div class="saRow">
-                      <div class="saField">
-                        <label class="saLabel" for="hashtags">Hashtag (opzionale)</label>
-                        <input id="hashtags" class="saInput" placeholder="#azienda #brand ..." />
-                      </div>
-                      <div class="saField">
-                        <label class="saLabel" for="scheduleAt">Programma (opzionale)</label>
-                        <input id="scheduleAt" class="saInput" type="datetime-local" />
-                      </div>
-                    </div>
-
-                    <div class="saField">
-                      <div class="saLabel">Media</div>
-                      <div class="saUpload">
-                        <input id="mediaFile" type="file" accept="image/*,video/*" />
-                        <label for="mediaFile" class="saBtn" role="button" tabindex="0">
-                          <span class="saBtnText">Scegli file</span>
-                        </label>
-                        <div class="saFileMeta" id="fileMeta">Nessun file selezionato</div>
-                      </div>
-                    </div>
-
-                    <div class="saError" id="formError" hidden></div>
-
-                    <div class="saActions">
-                      <button class="saBtn" id="btnEnqueue" type="button">
-                        <span class="saSpinner" aria-hidden="true"></span>
-                        <span class="saBtnText">Aggiungi in coda</span>
-                      </button>
-                      <button class="saBtn primary" id="btnPublish" type="button">
-                        <span class="saSpinner" aria-hidden="true"></span>
-                        <span class="saBtnText">Pubblica</span>
-                      </button>
-                    </div>
-
-                    <div class="saNote">
-                      Reel: solo video • Post: solo immagine • Story: immagine o video
-                    </div>
-                  </div>
-                </div>
-
-                <div class="saCard" style="margin-top:14px;">
-                  <div class="saCardHeader">
-                    <div>
-                      <div class="saCardTitle">Preview</div>
-                      <div class="saCardHint">Anteprima locale (mock).</div>
-                    </div>
-                  </div>
-
-                  <div class="saPreview">
-                    <div class="saPreviewMedia" id="previewMedia">
-                      <div class="saPreviewPlaceholder">Media preview</div>
-                    </div>
-                    <div class="saPreviewText" id="previewText"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- RIGHT -->
-              <div class="saCol">
-                <div class="saCard saCardTall">
-                  <div class="saCardHeader">
-                    <div>
-                      <div class="saCardTitle">Coda</div>
-                      <div class="saCardHint">Seleziona una riga per vedere i dettagli.</div>
-                    </div>
-                  </div>
-
-                  <div class="saTableWrap" aria-label="Elenco coda">
-                    <table class="saTable">
-                      <thead>
-                        <tr>
-                          <th style="min-width:140px;">Orario</th>
-                          <th style="min-width:80px;">Tipo</th>
-                          <th style="min-width:120px;">Canali</th>
-                          <th style="min-width:130px;">Stato</th>
-                          <th style="min-width:120px; text-align:right;">Azione</th>
-                        </tr>
-                      </thead>
-                      <tbody id="queueBody"></tbody>
-                    </table>
-
-                    <div class="saEmpty" id="queueEmpty">Nessun elemento in coda.</div>
-                  </div>
-
-                  <div class="saDetails" id="details" hidden>
-                    <div class="saDetailsHeader">
-                      <div class="saDetailsTitle">Dettagli</div>
-                      <div class="saDetailsMeta" id="detailsMeta"></div>
-                    </div>
-                    <div class="saDetailsError" id="detailsError" hidden></div>
-
-                    <details class="saPayload">
-                      <summary>Payload</summary>
-                      <pre id="detailsPayload"></pre>
-                    </details>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
+      <div class="actions">
+        <button class="btn primary" id="btnGenerate" type="button">
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Genera</span>
+        </button>
+        <button class="btn" id="btnCopyAll" type="button">Copia tutto</button>
+      </div>
     </div>
 
-    <footer class="appFooter" id="appFooter">
-      <div class="footerInner footerGdpr">
-        <div class="footerMini">© 2026 iLovePaghe | P.IVA IT05060650230 | mail: <a href="mailto:paghe@ilovepaghe.com" class="footerMail">paghe@ilovepaghe.com</a></div>
-        <div class="footerRight">
-          <div class="footerLinks">
-            <a class="footerLink" href="/terms.html">Termini</a>
-            <a class="footerLink" href="/privacy-policy.html">Privacy</a>
+    <div class="card" aria-label="Editor">
+      <div class="cardHead">
+        <h2 class="h">Brief</h2>
+        <span class="status warn" id="ctxStatus">Contesto: in caricamento…</span>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <div class="label">Idea / angolo (opzionale)</div>
+          <textarea id="brief" class="textarea" placeholder="Esempi:&#10;• Perché inviare cedolini via email senza errori&#10;• Demo iLovePaghe: come funziona in 30 secondi&#10;• Caso reale: da caos a ordine con un processo pulito"></textarea>
+          <div class="note">
+            Se lasci vuoto, genero un contenuto generale basato sul sito.
           </div>
+          <div class="note" id="hint" style="display:none;"></div>
+        </div>
+
+        <div class="out" id="outArea">
+          <!-- OUTPUT blocks injected here -->
         </div>
       </div>
-    </footer>
+    </div>
   </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
     (function(){
       "use strict";
 
-      const $ = (sel, root=document) => root.querySelector(sel);
+      // ===== Config =====
+      const SITE_BASE = "https://www.ilovepaghe.com";
+      // Best effort: try a few pages. If CORS blocks, fallback to a public text proxy.
+      const PAGES = [
+        "/",
+        "/index.html",
+        "/come-funziona.html",
+        "/dashboard.html",
+        "/premium.html",
+        "/dipendenti.html"
+      ];
 
-      const KEYS = {
-        backend: "sa_backendUrl_v1",
-        connected: "sa_metaConnected_v1",
-        pageId: "sa_fbPageId_v1",
-        igId: "sa_igAccountId_v1",
-        queue: "sa_queue_v1"
-      };
+      const CACHE_KEY = "cs_site_context_v2";
+      const CACHE_TTL_MS = 1000 * 60 * 60 * 12; // 12h
 
-      const state = {
-        backendUrl: "",
-        metaConnected: false,
-        assets: { pages: [], igAccounts: [] },
-        selected: { pageId: "", igAccountId: "" },
-        queue: [],
-        files: new Map(), // clientId -> File (solo in sessione)
-        selectedId: null,
-        draftFile: null,
-        draftPreviewUrl: null
-      };
+      // ===== DOM helpers =====
+      const $ = (s, r=document) => r.querySelector(s);
+      const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
-      // ---------- Utils
-      function nowISO(){ return new Date().toISOString(); }
-      function uid(){
-        return "c_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
-      }
-      function baseUrl(){
-        return ""; // sempre same-origin (web.app) per cookie/session
-      }
-      function api(path){
-        const b = baseUrl();
-        return b ? (b + path) : path;
-      }
-      function expectedOrigin(){
-        return location.origin; // callback arriva su web.app
-      }
-      function fmtDateTimeLocal(isoOrLocal){
-        if(!isoOrLocal) return "—";
-        try{
-          const d = new Date(isoOrLocal);
-          if(Number.isNaN(d.getTime())) return isoOrLocal;
-          return d.toLocaleString("it-IT", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
-        }catch(_e){
-          return isoOrLocal;
-        }
-      }
-      function toISOFromDatetimeLocal(v){
-        if(!v) return "";
-        try{
-          const d = new Date(v);
-          if(Number.isNaN(d.getTime())) return "";
-          return d.toISOString();
-        }catch(_e){
-          return "";
-        }
+      function toast(msg){
+        const t = $("#toast");
+        if(!t) return;
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(toast._tm);
+        toast._tm = setTimeout(()=>t.classList.remove("show"), 1400);
       }
 
-      function setLoading(btn, isLoading){
-        if(!btn) return;
-        btn.classList.toggle("loading", !!isLoading);
-        btn.disabled = !!isLoading;
-      }
-
-      function showTopMsg(text, kind){
-        const el = $("#saTopMsg");
-        if(!el) return;
-        if(!text){
-          el.style.display = "none";
-          el.textContent = "";
-          el.className = "saMsg";
-          return;
-        }
-        el.style.display = "block";
-        el.textContent = text;
-        el.className = "saMsg " + (kind || "");
-      }
-
-      function showFormError(text){
-        const el = $("#formError");
-        if(!el) return;
-        if(!text){
-          el.hidden = true;
-          el.textContent = "";
-          return;
-        }
-        el.hidden = false;
-        el.textContent = text;
-      }
-
-      function persistQueue(){
-        // Nota: file NON persistibile. Salviamo solo i metadati.
-        const safe = state.queue.map(it => ({
-          clientId: it.clientId,
-          createdAt: it.createdAt,
-          type: it.type,
-          title: it.title || "",
-          caption: it.caption || "",
-          hashtags: it.hashtags || "",
-          channels: Array.isArray(it.channels) ? it.channels : [],
-          pageId: it.pageId || "",
-          igAccountId: it.igAccountId || "",
-          scheduleAtLocal: it.scheduleAtLocal || "",
-          scheduleAtISO: it.scheduleAtISO || "",
-          status: it.status || "Draft",
-          jobId: it.jobId || "",
-          lastError: it.lastError || "",
-          fileMeta: it.fileMeta || null
-        }));
-        try{
-          localStorage.setItem(KEYS.queue, JSON.stringify(safe));
-        }catch(_e){}
-      }
-
-      function loadQueue(){
-        try{
-          const raw = localStorage.getItem(KEYS.queue);
-          if(!raw) return;
-          const arr = JSON.parse(raw);
-          if(!Array.isArray(arr)) return;
-          state.queue = arr.map(normalizeItem);
-        }catch(_e){}
-      }
-
-      function normalizeItem(it){
-        const o = Object.assign({}, it);
-        if(!o.clientId) o.clientId = uid();
-        if(!o.createdAt) o.createdAt = nowISO();
-        if(!o.status) o.status = "Draft";
-        if(!Array.isArray(o.channels)) o.channels = [];
-        return o;
-      }
-
-      function renderConn(){
-        const dot = $("#saConnDot");
-        const txt = $("#saConnText");
-        if(!dot || !txt) return;
-
-        dot.classList.remove("ok","bad");
-        if(state.metaConnected){
-          dot.classList.add("ok");
-          txt.textContent = "Connesso";
-        }else{
-          txt.textContent = "Non connesso";
-        }
-      }
-
-      function renderAssetsSelects(){
-        const fbSel = $("#fbPageSelect");
-        const igSel = $("#igAccountSelect");
-        if(!fbSel || !igSel) return;
-
-        const prevFb = state.selected.pageId;
-        const prevIg = state.selected.igAccountId;
-
-        fbSel.innerHTML = `<option value="">—</option>` + (state.assets.pages || [])
-          .map(p => `<option value="${escapeHtml(p.id || "")}">${escapeHtml(p.name || p.id || "Pagina")}</option>`)
-          .join("");
-
-        igSel.innerHTML = `<option value="">—</option>` + (state.assets.igAccounts || [])
-          .map(a => {
-            const label = a.username ? `@${a.username}` : (a.name || a.id || "IG");
-            return `<option value="${escapeHtml(a.id || "")}">${escapeHtml(label)}</option>`;
-          })
-          .join("");
-
-        if(prevFb) fbSel.value = prevFb;
-        if(prevIg) igSel.value = prevIg;
-      }
-
-      function statusClass(status){
-        const s = (status || "").toLowerCase();
-        if(s === "published") return "good";
-        if(s === "failed") return "bad";
-        if(s === "publishing" || s === "scheduling" || s === "scheduled") return "warn";
-        return "";
-      }
-
-      function statusLabel(status){
-        const s = (status || "Draft");
-        return s;
-      }
-
-      function renderQueue(){
-        const tbody = $("#queueBody");
-        const empty = $("#queueEmpty");
-        if(!tbody || !empty) return;
-
-        if(!state.queue.length){
-          tbody.innerHTML = "";
-          empty.style.display = "block";
-          renderDetails();
-          return;
-        }
-        empty.style.display = "none";
-
-        tbody.innerHTML = state.queue.map(it => {
-          const when = it.scheduleAtISO ? fmtDateTimeLocal(it.scheduleAtISO) : fmtDateTimeLocal(it.createdAt);
-          const type = (it.type || "post").toUpperCase();
-          const channels = (it.channels || []).map(c => `<span class="saChip">${c === "instagram" ? "IG" : "FB"}</span>`).join("");
-          const sc = statusClass(it.status);
-          const pill = `
-            <span class="saStatusPill ${sc}">
-              <span class="saPillDot"></span>
-              ${escapeHtml(statusLabel(it.status))}
-            </span>`;
-          const canRun = canExecute(it);
-          const actionLabel = (it.status === "Failed") ? "Riprova" : "Esegui";
-
-          return `
-            <tr class="saTr ${it.clientId === state.selectedId ? "selected" : ""}" data-id="${escapeHtml(it.clientId)}">
-              <td>${escapeHtml(when)}</td>
-              <td>${escapeHtml(type)}</td>
-              <td><div class="saChips">${channels || `<span class="saChip">—</span>`}</div></td>
-              <td>${pill}</td>
-              <td style="text-align:right;">
-                <div class="saRowAction">
-                  <button class="saRowBtn" type="button" data-action="run" data-id="${escapeHtml(it.clientId)}" ${canRun ? "" : "disabled"}>
-                    <span class="saSpinner" aria-hidden="true"></span>
-                    <span class="saBtnText">${escapeHtml(actionLabel)}</span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          `;
-        }).join("");
-
-        tbody.querySelectorAll(".saTr").forEach(tr => {
-          tr.addEventListener("click", () => {
-            const id = tr.getAttribute("data-id") || "";
-            selectItem(id);
-          });
-        });
-
-        tbody.querySelectorAll('button[data-action="run"]').forEach(btn => {
-          btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const id = btn.getAttribute("data-id") || "";
-            executeItem(id, btn);
-          });
-        });
-
-        renderDetails();
-      }
-
-      function renderDetails(){
-        const box = $("#details");
-        const meta = $("#detailsMeta");
-        const err = $("#detailsError");
-        const pre = $("#detailsPayload");
-        if(!box || !meta || !err || !pre) return;
-
-        const it = state.queue.find(x => x.clientId === state.selectedId);
-        if(!it){
-          box.hidden = true;
-          return;
-        }
-        box.hidden = false;
-
-        const parts = [];
-        if(it.jobId) parts.push(`job: ${it.jobId}`);
-        if(it.fileMeta && it.fileMeta.name) parts.push(`file: ${it.fileMeta.name}`);
-        if(it.scheduleAtISO) parts.push(`schedule: ${fmtDateTimeLocal(it.scheduleAtISO)}`);
-        meta.textContent = parts.join(" • ") || it.clientId;
-
-        if(it.lastError){
-          err.hidden = false;
-          err.textContent = it.lastError;
-        }else{
-          err.hidden = true;
-          err.textContent = "";
-        }
-
-        const payload = {
-          clientId: it.clientId,
-          type: it.type,
-          title: it.title || "",
-          caption: it.caption || "",
-          hashtags: it.hashtags || "",
-          channels: it.channels || [],
-          pageId: it.pageId || "",
-          igAccountId: it.igAccountId || "",
-          scheduleAtISO: it.scheduleAtISO || "",
-          status: it.status || "",
-          jobId: it.jobId || "",
-          fileMeta: it.fileMeta || null,
-          hasFileInSession: state.files.has(it.clientId)
-        };
-        pre.textContent = JSON.stringify(payload, null, 2);
-      }
-
-      function selectItem(id){
-        state.selectedId = id;
-        renderQueue();
-      }
-
-      function canExecute(it){
-        const s = (it.status || "Draft").toLowerCase();
-        if(s === "published") return false;
-        if(s === "scheduled") return false;
-        if(s === "publishing" || s === "scheduling") return false;
-        return true;
+      function setLoading(on){
+        const b = $("#btnGenerate");
+        if(!b) return;
+        b.classList.toggle("loading", !!on);
+        b.disabled = !!on;
       }
 
       function escapeHtml(str){
@@ -1260,493 +397,477 @@
           .replace(/'/g, "&#039;");
       }
 
-      // ---------- Preview
-      function updateCaptionCounter(){
-        const el = $("#captionCounter");
-        const cap = $("#caption");
-        if(!el || !cap) return;
-        el.textContent = String((cap.value || "").length);
-      }
-
-      function finalText(caption, hashtags){
-        const c = (caption || "").trim();
-        const h = (hashtags || "").trim();
-        if(!c && !h) return "";
-        if(c && h) return c + "\n\n" + h;
-        return c || h;
-      }
-
-      function renderPreview(){
-        const out = $("#previewText");
-        if(!out) return;
-        const caption = ($("#caption")?.value || "");
-        const hashtags = ($("#hashtags")?.value || "");
-        const t = finalText(caption, hashtags);
-        out.textContent = t || "—";
-      }
-
-      function setPreviewMediaFromFile(file){
-        const wrap = $("#previewMedia");
-        if(!wrap) return;
-
-        if(state.draftPreviewUrl){
-          try{ URL.revokeObjectURL(state.draftPreviewUrl); }catch(_e){}
-          state.draftPreviewUrl = null;
+      // ===== RNG (deterministic-ish) =====
+      function hash32(str){
+        let h = 2166136261 >>> 0;
+        for(let i=0;i<str.length;i++){
+          h ^= str.charCodeAt(i);
+          h = Math.imul(h, 16777619);
         }
-
-        wrap.innerHTML = "";
-        if(!file){
-          wrap.innerHTML = `<div class="saPreviewPlaceholder">Media preview</div>`;
-          return;
-        }
-
-        const url = URL.createObjectURL(file);
-        state.draftPreviewUrl = url;
-
-        if(file.type && file.type.startsWith("video/")){
-          const v = document.createElement("video");
-          v.src = url;
-          v.controls = true;
-          v.muted = true;
-          v.playsInline = true;
-          wrap.appendChild(v);
-        }else{
-          const img = document.createElement("img");
-          img.src = url;
-          img.alt = "";
-          wrap.appendChild(img);
-        }
+        return h >>> 0;
       }
-
-      function updateFileMeta(file){
-        const meta = $("#fileMeta");
-        if(!meta) return;
-        if(!file){
-          meta.textContent = "Nessun file selezionato";
-          return;
-        }
-        const mb = (file.size / (1024*1024));
-        meta.textContent = `${file.name} • ${mb.toFixed(1)} MB`;
-      }
-
-      // ---------- Form collect/validate
-      function getChannels(){
-        const ch = [];
-        if($("#chIG")?.checked) ch.push("instagram");
-        if($("#chFB")?.checked) ch.push("facebook");
-        return ch;
-      }
-
-      function validateMedia(type, file){
-        const errs = [];
-        if(!file) return ["Seleziona un file media."];
-
-        const isVideo = (file.type || "").startsWith("video/");
-        const isImage = (file.type || "").startsWith("image/");
-
-        if(type === "reel" && !isVideo) errs.push("Reel: carica un video.");
-        if(type === "post" && !isImage) errs.push("Post: carica un'immagine.");
-        if(type === "story" && !(isVideo || isImage)) errs.push("Story: carica un'immagine o un video.");
-        return errs;
-      }
-
-      function validateForQueue(data){
-        const errs = [];
-        if(!data.channels.length) errs.push("Seleziona almeno un canale.");
-        errs.push(...validateMedia(data.type, data.file));
-        return errs;
-      }
-
-      function validateForPublish(data){
-        const errs = [];
-        if(!state.metaConnected) errs.push("Prima fai Accedi Meta.");
-        if(!data.channels.length) errs.push("Seleziona almeno un canale.");
-        errs.push(...validateMedia(data.type, data.file));
-
-        if(data.channels.includes("facebook") && !data.pageId) errs.push("Seleziona una pagina Facebook.");
-        if(data.channels.includes("instagram") && !data.igAccountId) errs.push("Seleziona un account Instagram Business.");
-        return errs;
-      }
-
-      function collectForm(){
-        const type = ($("#contentType")?.value || "post").trim();
-        const channels = getChannels();
-        const title = ($("#internalTitle")?.value || "").trim();
-        const caption = ($("#caption")?.value || "");
-        const hashtags = ($("#hashtags")?.value || "");
-        const scheduleAtLocal = ($("#scheduleAt")?.value || "").trim();
-        const scheduleAtISO = scheduleAtLocal ? toISOFromDatetimeLocal(scheduleAtLocal) : "";
-
-        const pageId = ($("#fbPageSelect")?.value || "").trim();
-        const igAccountId = ($("#igAccountSelect")?.value || "").trim();
-
-        const file = state.draftFile;
-
-        return {
-          type,
-          channels,
-          title,
-          caption,
-          hashtags,
-          captionFinal: finalText(caption, hashtags),
-          scheduleAtLocal,
-          scheduleAtISO,
-          pageId,
-          igAccountId,
-          file,
-          fileMeta: file ? { name: file.name, type: file.type, size: file.size } : null
+      function mulberry32(seed){
+        let a = seed >>> 0;
+        return function(){
+          a |= 0;
+          a = (a + 0x6D2B79F5) | 0;
+          let t = Math.imul(a ^ (a >>> 15), 1 | a);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
         };
       }
+      function pick(arr, rng){ return arr[Math.floor(rng()*arr.length)] || ""; }
+      function pickN(arr, n, rng){
+        const a = arr.slice();
+        const out = [];
+        for(let i=0;i<Math.min(n,a.length);i++){
+          out.push(a.splice(Math.floor(rng()*a.length),1)[0]);
+        }
+        return out;
+      }
 
-      // ---------- API calls
-      async function fetchJSON(url, opts={}){
-        const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 20000);
+      // ===== Site context fetch =====
+      function setCtxStatus(text, kind){
+        const el = $("#ctxStatus");
+        if(!el) return;
+        el.textContent = text;
+        el.classList.remove("good","warn");
+        if(kind) el.classList.add(kind);
+      }
+
+      function cleanText(s){
+        return (s || "")
+          .replace(/\u00a0/g, " ")
+          .replace(/[ \t]+/g, " ")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+      }
+
+      function extractTextFromHtml(html){
         try{
-          const res = await fetch(url, { ...opts, signal: controller.signal, credentials: "include" });
-          const ct = res.headers.get("content-type") || "";
-          let data = null;
-          if(ct.includes("application/json")){
-            data = await res.json();
-          }else{
-            const txt = await res.text();
-            data = { raw: txt };
-          }
-          if(!res.ok){
-            const msg = (data && (data.error || data.message)) ? (data.error || data.message) : `HTTP ${res.status}`;
-            throw new Error(msg);
-          }
-          return data;
+          const doc = new DOMParser().parseFromString(html, "text/html");
+          // remove noisy nodes
+          doc.querySelectorAll("script,style,noscript,svg,video,iframe,canvas").forEach(n => n.remove());
+          // optionally remove nav/footer if present
+          doc.querySelectorAll("nav,footer,header").forEach(n => n.remove());
+          const text = doc.body ? doc.body.innerText : "";
+          return cleanText(text);
+        }catch(_e){
+          return cleanText(html);
+        }
+      }
+
+      async function fetchWithTimeout(url, ms){
+        const c = new AbortController();
+        const t = setTimeout(()=>c.abort(), ms);
+        try{
+          const res = await fetch(url, { signal:c.signal, credentials:"omit", cache:"no-store" });
+          return res;
         }finally{
           clearTimeout(t);
         }
       }
 
-      async function loginWithMeta(btn){
-        showTopMsg("", "");
-        setLoading(btn, true);
+      async function fetchPageTextDirect(url){
+        const res = await fetchWithTimeout(url, 8000);
+        if(!res.ok) throw new Error("HTTP " + res.status);
+        const ct = (res.headers.get("content-type") || "").toLowerCase();
+        const raw = await res.text();
+        if(ct.includes("text/html") || raw.includes("<html") || raw.includes("<body")){
+          return extractTextFromHtml(raw);
+        }
+        return cleanText(raw);
+      }
 
+      async function fetchPageTextProxy(url){
+        // Public text proxy (best-effort). Remove later when backend proxy is ready.
+        // Format: https://r.jina.ai/https://example.com/path
+        const proxy = "https://r.jina.ai/" + url;
+        const res = await fetchWithTimeout(proxy, 12000);
+        if(!res.ok) throw new Error("PROXY HTTP " + res.status);
+        const raw = await res.text();
+        // Proxy often returns text already; keep it lean
+        return cleanText(raw);
+      }
+
+      function compressContext(text){
+        const max = 12000;
+        if(!text) return "";
+        // keep first chunk + some tail for variety
+        if(text.length <= max) return text;
+        const head = text.slice(0, 9000);
+        const tail = text.slice(-2500);
+        return cleanText(head + "\n\n" + tail);
+      }
+
+      async function buildSiteContext(force){
+        // cache
         try{
-          const url = api("/auth/meta/start");
-          const w = 560, h = 720;
-          const left = Math.max(0, (window.screenX || 0) + (window.outerWidth - w) / 2);
-          const top = Math.max(0, (window.screenY || 0) + (window.outerHeight - h) / 2);
-          const popup = window.open(url, "meta_oauth", `width=${w},height=${h},left=${left},top=${top}`);
-
-          if(!popup){
-            showTopMsg("Popup bloccato: abilita i pop-up e riprova.", "warn");
-            return;
+          const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+          if(!force && cached && cached.ts && (Date.now() - cached.ts) < CACHE_TTL_MS && cached.text){
+            setCtxStatus("Contesto: caricato (cache)", "good");
+            return cached.text;
           }
+        }catch(_e){}
 
-          showTopMsg("Completa l’accesso nel popup. Questa pagina aspetta la conferma.", "warn");
+        setCtxStatus("Contesto: lettura ilovepaghe.com…", "warn");
 
-          const origin = expectedOrigin();
+        const urls = PAGES.map(p => SITE_BASE + p);
+        const texts = [];
 
-          const onMessage = (e) => {
+        // Try direct (may be blocked by CORS if this page is not on same origin)
+        let directOk = false;
+        for(const u of urls){
+          try{
+            const t = await fetchPageTextDirect(u);
+            if(t) texts.push(t);
+            directOk = true;
+          }catch(_e){ /* ignore */ }
+        }
+
+        // Fallback proxy if direct failed or returned too little
+        if(!directOk || texts.join("\n").length < 1500){
+          const proxyTexts = [];
+          for(const u of urls){
             try{
-              if(e.origin !== origin) return;
-              const d = e.data || {};
-              const type = d.type || d.event || "";
-              if(type !== "META_AUTH") return;
-
-              window.removeEventListener("message", onMessage);
-
-              if(d.ok){
-                state.metaConnected = true;
-                try{ localStorage.setItem(KEYS.connected, "1"); }catch(_e){}
-                renderConn();
-                showTopMsg("Connesso. Ora puoi ricaricare gli asset.", "good");
-              }else{
-                state.metaConnected = false;
-                try{ localStorage.setItem(KEYS.connected, "0"); }catch(_e){}
-                renderConn();
-                showTopMsg(d.error ? ("Accesso non completato: " + d.error) : "Accesso non completato.", "warn");
-              }
-            }catch(_e){}
-          };
-
-          window.addEventListener("message", onMessage);
-        }catch(e){
-          showTopMsg("Errore accesso: " + (e.message || "imprevisto"), "bad");
-        }finally{
-          setLoading(btn, false);
-        }
-      }
-
-      async function loadMetaAssets(btn){
-        showTopMsg("", "");
-        setLoading(btn, true);
-        try{
-          const data = await fetchJSON(api("/api/meta/assets"), { method: "GET" });
-
-          const pages = data.pages || data.fbPages || data.facebookPages || [];
-          const igs = data.igAccounts || data.instagramAccounts || data.igs || [];
-
-          state.assets.pages = Array.isArray(pages) ? pages : [];
-          state.assets.igAccounts = Array.isArray(igs) ? igs : [];
-
-          renderAssetsSelects();
-          showTopMsg("Asset aggiornati.", "good");
-        }catch(e){
-          showTopMsg("Impossibile ricaricare asset: " + (e.message || "errore"), "bad");
-        }finally{
-          setLoading(btn, false);
-        }
-      }
-
-      async function refreshJobs(btn){
-        showTopMsg("", "");
-        setLoading(btn, true);
-        try{
-          const data = await fetchJSON(api("/api/jobs"), { method: "GET" });
-
-          const jobs = Array.isArray(data) ? data : (data.jobs || []);
-          if(!Array.isArray(jobs)){
-            showTopMsg("Formato /api/jobs non valido.", "warn");
-            return;
+              const t = await fetchPageTextProxy(u);
+              if(t) proxyTexts.push(t);
+            }catch(_e){ /* ignore */ }
           }
-
-          for(const j of jobs){
-            const cid = j.clientId || "";
-            const jid = j.jobId || "";
-            const status = j.status || "";
-            const error = j.error || j.message || "";
-
-            const it = state.queue.find(x => (cid && x.clientId === cid) || (jid && x.jobId === jid));
-            if(!it) continue;
-
-            if(status) it.status = status;
-            if(jid) it.jobId = jid;
-            it.lastError = (status === "Failed" || status === "failed") ? (error || it.lastError || "Errore") : "";
-          }
-
-          persistQueue();
-          renderQueue();
-          showTopMsg("Stati aggiornati.", "good");
-        }catch(e){
-          showTopMsg("Impossibile aggiornare stati: " + (e.message || "errore"), "bad");
-        }finally{
-          setLoading(btn, false);
+          if(proxyTexts.length) texts.splice(0, texts.length, ...proxyTexts);
         }
+
+        const merged = compressContext(texts.join("\n\n---\n\n"));
+        if(!merged || merged.length < 600){
+          setCtxStatus("Contesto: non disponibile (CORS/lettura bloccata)", "warn");
+          // still save empty to avoid loops
+          try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), text:"" })); }catch(_e){}
+          return "";
+        }
+
+        setCtxStatus("Contesto: caricato (sito)", "good");
+        try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), text: merged })); }catch(_e){}
+        return merged;
       }
 
-      async function publishOrSchedule(item, rowBtn){
-        const isSchedule = !!item.scheduleAtISO;
-        const endpoint = isSchedule ? "/api/schedule" : "/api/publish";
+      // ===== Context → signals =====
+      const IT_STOP = new Set([
+        "il","lo","la","i","gli","le","un","una","uno","di","a","da","in","con","su","per","tra","fra",
+        "che","e","o","ma","se","non","piu","più","come","del","della","dei","delle","al","allo","alla","ai","agli","alle",
+        "nel","nello","nella","nei","nelle","sul","sullo","sulla","sui","sulle","alla","all","un","una","sono","sei","si","no",
+        "questa","questo","quello","quella","anche","solo","tutto","tutta","tutti","tutte","ogni","oggi","sempre","mai",
+        "puoi","può","fare","fai","fatto","più","meno","molto","molti","molte","così","qui","lì","loro","noi","voi","tu","io"
+      ]);
 
-        const file = state.files.get(item.clientId);
-        if(!file){
-          item.status = "Failed";
-          item.lastError = "File non presente in sessione. Ricarica il media e ricrea l’elemento.";
-          persistQueue();
-          renderQueue();
-          return;
-        }
-
-        item.lastError = "";
-        item.status = isSchedule ? "Scheduling" : "Publishing";
-        persistQueue();
-        renderQueue();
-
-        if(rowBtn) setLoading(rowBtn, true);
-
-        try{
-          const fd = new FormData();
-          fd.append("clientId", item.clientId);
-          fd.append("type", item.type || "post");
-          fd.append("title", item.title || "");
-          fd.append("caption", item.caption || "");
-          fd.append("hashtags", item.hashtags || "");
-          fd.append("channels", JSON.stringify(item.channels || []));
-          fd.append("pageId", item.pageId || "");
-          fd.append("igAccountId", item.igAccountId || "");
-          if(item.scheduleAtISO) fd.append("scheduleAt", item.scheduleAtISO);
-          fd.append("file", file, file.name);
-
-          const data = await fetchJSON(api(endpoint), { method: "POST", body: fd });
-
-          const jobId = data.jobId || data.id || "";
-          const status = data.status || (isSchedule ? "Scheduled" : "Published");
-
-          if(jobId) item.jobId = jobId;
-          item.status = status;
-          item.lastError = "";
-
-          persistQueue();
-          renderQueue();
-          showTopMsg(isSchedule ? "Programmazione inviata." : "Pubblicazione inviata.", "good");
-        }catch(e){
-          item.status = "Failed";
-          item.lastError = e.message || "Errore durante l’invio.";
-          persistQueue();
-          renderQueue();
-          showTopMsg("Errore invio: " + (e.message || "imprevisto"), "bad");
-        }finally{
-          if(rowBtn) setLoading(rowBtn, false);
-        }
+      function tokenize(text){
+        return (text || "")
+          .toLowerCase()
+          .replace(/[^\p{L}\p{N}\s]+/gu, " ")
+          .split(/\s+/)
+          .map(w => w.trim())
+          .filter(w => w.length >= 3 && !IT_STOP.has(w));
       }
 
-      // ---------- Queue ops
-      function enqueueFromForm(autoPublish){
-        showFormError("");
-
-        const data = collectForm();
-        const errs = autoPublish ? validateForPublish(data) : validateForQueue(data);
-        if(errs.length){
-          showFormError(errs[0]);
-          return;
+      function topKeywords(text, limit){
+        const freq = new Map();
+        for(const w of tokenize(text)){
+          freq.set(w, (freq.get(w) || 0) + 1);
         }
+        return Array.from(freq.entries())
+          .sort((a,b)=> b[1]-a[1])
+          .slice(0, limit || 18)
+          .map(([w])=> w);
+      }
 
-        state.selected.pageId = data.pageId || state.selected.pageId || "";
-        state.selected.igAccountId = data.igAccountId || state.selected.igAccountId || "";
-        try{
-          localStorage.setItem(KEYS.pageId, state.selected.pageId);
-          localStorage.setItem(KEYS.igId, state.selected.igAccountId);
-        }catch(_e){}
-
-        const it = {
-          clientId: uid(),
-          createdAt: nowISO(),
-          type: data.type,
-          title: data.title,
-          caption: data.caption,
-          hashtags: data.hashtags,
-          channels: data.channels,
-          pageId: data.pageId,
-          igAccountId: data.igAccountId,
-          scheduleAtLocal: data.scheduleAtLocal,
-          scheduleAtISO: data.scheduleAtISO,
-          status: "Draft",
-          jobId: "",
-          lastError: "",
-          fileMeta: data.fileMeta
+      function detectFeatures(text){
+        const t = (text || "").toLowerCase();
+        return {
+          payroll: /cedolin|buste\s+paga|paghe|retribuz/i.test(t),
+          pdf: /\bpdf\b/.test(t),
+          email: /email|mail/.test(t),
+          dipendenti: /dipendent/i.test(t),
+          sicurezza: /privacy|sicurez|gdpr|dati/i.test(t),
+          premium: /premium|abbonament|piano/i.test(t),
+          demo: /demo|contatt|prenot|richied/i.test(t),
+          automazione: /automat|flusso|process/i.test(t),
+          dashboard: /dashboard|pannello|area\s+riservata/i.test(t),
         };
-
-        state.queue.unshift(it);
-        state.files.set(it.clientId, data.file);
-
-        persistQueue();
-        state.selectedId = it.clientId;
-        renderQueue();
-
-        if(autoPublish){
-          publishOrSchedule(it, null);
-        }else{
-          showTopMsg("Aggiunto in coda.", "good");
-        }
       }
 
-      function executeItem(clientId, btn){
-        const it = state.queue.find(x => x.clientId === clientId);
-        if(!it) return;
+      // ===== Generators (2 modes only) =====
+      function makeHashtags(keywords){
+        const niche = keywords.slice(0, 8);
+        const mid = ["business","produttivita","processi","organizzazione","hr","aziende","lavoro","workflow"];
+        const broad = ["marketing","reelsitalia","instagramtips","socialmedia","contentcreator","branding","howto","startup"];
 
-        const data = {
-          type: it.type,
-          channels: it.channels || [],
-          file: state.files.get(it.clientId),
-          pageId: it.pageId || "",
-          igAccountId: it.igAccountId || ""
+        const all = [
+          ...niche,
+          ...pickN(mid, 7, mulberry32(hash32(keywords.join("|")+"mid"))),
+          ...pickN(broad, 7, mulberry32(hash32(keywords.join("|")+"broad"))),
+        ]
+          .map(w => "#" + w.replace(/[^a-z0-9_àèéìòù]+/gi,"").slice(0, 28))
+          .filter(x => x.length > 2)
+          .slice(0, 22);
+
+        return all.join(" ");
+      }
+
+      function buildGeneralPost(ctx, brief, rng){
+        const kw = ctx.keywords;
+        const f = ctx.features;
+
+        const angles = [
+          "errore comune",
+          "checklist rapida",
+          "metodo in 3 step",
+          "mito vs realtà",
+          "prima/dopo (ordine vs caos)"
+        ];
+
+        const angle = pick(angles, rng);
+        const topic = brief || (f.payroll ? "gestione e invio cedolini" : "organizzazione del lavoro");
+        const benefit = f.automazione ? "meno tempo perso e meno errori" : "più ordine e più controllo";
+        const proof = f.sicurezza ? "con attenzione a privacy e dati" : "senza complicare i flussi";
+
+        const hooks = [
+          `Se ${topic} ti porta via tempo, probabilmente stai sbagliando una cosa.`,
+          `L’${angle} che ti fa migliorare ${topic} già da oggi.`,
+          `Da caos a ordine: il modo più pulito per gestire ${topic}.`
+        ];
+
+        const body = [
+          hooks[0],
+          "",
+          `👉 Focus: ${angle}.`,
+          "",
+          `Ecco uno schema semplice:`,
+          `1) Definisci l’esito (cosa deve essere vero a fine flusso).`,
+          `2) Riduci i passaggi: tieni solo ciò che cambia il risultato.`,
+          `3) Aggiungi una “prova” (numero, esempio, screenshot) per rendere tutto replicabile.`,
+          "",
+          `Risultato: ${benefit}, ${proof}.`,
+          "",
+          (f.demo ? `Se vuoi, richiedi una demo.` : `Se ti va, scrivimi e ti mando lo schema completo.`)
+        ].join("\n");
+
+        const hashtags = makeHashtags(kw);
+
+        return {
+          blocks: [
+            { title:"Hook (3 opzioni)", text: hooks.join("\n") },
+            { title:"Caption pronta", text: body },
+            { title:"Hashtag", text: hashtags }
+          ],
+          copyAll: ["HOOK:\n"+hooks.join("\n"), "\nCAPTION:\n"+body, "\nHASHTAG:\n"+hashtags].join("\n\n")
         };
-
-        const errs = validateForPublish(data);
-        if(errs.length){
-          it.status = "Failed";
-          it.lastError = errs[0];
-          persistQueue();
-          renderQueue();
-          showTopMsg(errs[0], "warn");
-          return;
-        }
-
-        publishOrSchedule(it, btn);
       }
 
-      // ---------- Init bindings
-      function init(){
-        try{          // Backend override disabilitato: sempre stesso dominio (evita 401/cookie cross-site)
-          try{ localStorage.removeItem(KEYS.backend); }catch(_e){}
-          state.backendUrl = "";
-          state.metaConnected = (localStorage.getItem(KEYS.connected) === "1");
-          state.selected.pageId = localStorage.getItem(KEYS.pageId) || "";
-          state.selected.igAccountId = localStorage.getItem(KEYS.igId) || "";
-        }catch(_e){}
+      function buildGeneralReel(ctx, brief, rng){
+        const kw = ctx.keywords;
+        const f = ctx.features;
 
-        loadQueue();
-        const fbSel = $("#fbPageSelect");
-        const igSel = $("#igAccountSelect");
+        const topic = brief || (f.payroll ? "invio cedolini senza confusione" : "mettere ordine nel processo");
+        const benefit = f.automazione ? "tagli tempo e riduci errori" : "risparmi tempo e lavori più pulito";
+        const proof = f.sicurezza ? "senza perdere controllo su privacy e dati" : "senza passaggi inutili";
 
-        if(fbSel){
-          fbSel.value = state.selected.pageId || "";
-          fbSel.addEventListener("change", () => {
-            state.selected.pageId = fbSel.value || "";
-            try{ localStorage.setItem(KEYS.pageId, state.selected.pageId); }catch(_e){}
+        const hookOpts = [
+          `Se ${topic} è sempre un casino, guarda questo.`,
+          `3 step per ${topic} (senza complicarti la vita).`,
+          `Il dettaglio che ti fa ${benefit} in modo stabile.`
+        ];
+
+        const hook = hookOpts[0];
+
+        const onScreen = [
+          `Basta caos su ${topic}`,
+          `Framework: Hook → Valore → Prova → CTA`,
+          `Step 1: esito finale`,
+          `Step 2: togli rumore`,
+          `Step 3: aggiungi una prova`,
+          `Risultato: ${benefit}`,
+          f.demo ? `CTA: richiedi demo` : `CTA: scrivimi`
+        ].join("\n");
+
+        const voice = [
+          `[0–2s] ${hook}`,
+          `[2–7s] Se vuoi ${benefit}, ti serve un processo ripetibile, non “più fatica”.`,
+          `[7–16s] Fai così: 1) definisci l’esito, 2) riduci i passaggi, 3) aggiungi una prova (numero o esempio).`,
+          `[16–24s] Questo ti dà ${benefit}, ${proof}.`,
+          `[24–30s] Salva questo reel. ${f.demo ? "Se vuoi, richiedi una demo." : "Se ti serve, scrivimi."}`
+        ].join("\n");
+
+        const shotlist = [
+          `1) Hook — primo piano / testo grande: “${hook}”`,
+          `2) Problema — b-roll scrivania / schermo: “Troppi passaggi = errori”`,
+          `3) Framework — overlay: “Hook → Valore → Prova → CTA”`,
+          `4) Step — 3 bullet a schermo (veloci, leggibili)`,
+          `5) Risultato — testo: “${benefit}”`,
+          `6) CTA — end card: “Salva • ${f.demo ? "Richiedi demo" : "Scrivimi"}”`
+        ].join("\n");
+
+        const caption = [
+          hook,
+          "",
+          `Schema rapido per ${topic}:`,
+          `• Esito finale chiaro`,
+          `• Passaggi essenziali`,
+          `• Una prova concreta (numero/esempio)`,
+          "",
+          `Risultato: ${benefit}.`,
+          "",
+          (f.demo ? `Vuoi vedere come si applica su iLovePaghe? Richiedi una demo.` : `Se ti va, scrivimi e ti mando la checklist.`)
+        ].join("\n");
+
+        const hashtags = makeHashtags(kw);
+
+        return {
+          blocks: [
+            { title:"Hook (3 opzioni)", text: hookOpts.join("\n") },
+            { title:"On-screen text", text: onScreen },
+            { title:"Voiceover", text: voice, mono:true },
+            { title:"Shotlist", text: shotlist },
+            { title:"Caption pronta", text: caption },
+            { title:"Hashtag", text: hashtags }
+          ],
+          copyAll: [
+            "HOOK (3 opzioni):\n"+hookOpts.join("\n"),
+            "\nON-SCREEN:\n"+onScreen,
+            "\nVOICEOVER:\n"+voice,
+            "\nSHOTLIST:\n"+shotlist,
+            "\nCAPTION:\n"+caption,
+            "\nHASHTAG:\n"+hashtags
+          ].join("\n\n")
+        };
+      }
+
+      // ===== UI render =====
+      let mode = "post";
+      let siteText = "";
+      let lastOutput = { copyAll:"", blocks:[] };
+
+      function renderBlocks(out){
+        const area = $("#outArea");
+        if(!area) return;
+        area.innerHTML = out.blocks.map((b, idx) => `
+          <div class="block">
+            <div class="blockHead">
+              <div class="blockTitle">${escapeHtml(b.title)}</div>
+              <button class="mini" type="button" data-copy="${idx}">Copia</button>
+            </div>
+            <div class="blockBody">
+              <div class="pre ${b.mono ? "mono" : ""}">${escapeHtml(b.text || "—")}</div>
+            </div>
+          </div>
+        `).join("");
+
+        $$("button[data-copy]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const i = parseInt(btn.getAttribute("data-copy") || "0", 10);
+            const text = out.blocks[i]?.text || "";
+            const ok = await copy(text);
+            toast(ok ? "Copiato" : "Impossibile copiare");
           });
-        }
-        if(igSel){
-          igSel.value = state.selected.igAccountId || "";
-          igSel.addEventListener("change", () => {
-            state.selected.igAccountId = igSel.value || "";
-            try{ localStorage.setItem(KEYS.igId, state.selected.igAccountId); }catch(_e){}
-          });
-        }
+        });
+      }
 
-        renderConn();
-        renderAssetsSelects();
-        renderQueue();
-
-        const cap = $("#caption");
-        const hash = $("#hashtags");
-        const type = $("#contentType");
-        const file = $("#mediaFile");
-
-        function repaint(){
-          updateCaptionCounter();
-          renderPreview();
-        }
-
-        if(cap) cap.addEventListener("input", repaint);
-        if(hash) hash.addEventListener("input", repaint);
-        if(type) type.addEventListener("change", () => {
-          repaint();
-          const data = collectForm();
-          const errs = validateMedia(data.type, data.file);
-          if(errs.length){
-            showFormError(errs[0]);
-          }else{
-            showFormError("");
+      async function copy(text){
+        const t = String(text || "").trim();
+        if(!t) return false;
+        try{
+          await navigator.clipboard.writeText(t);
+          return true;
+        }catch(_e){
+          try{
+            const ta = document.createElement("textarea");
+            ta.value = t;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            return true;
+          }catch(_e2){
+            return false;
           }
+        }
+      }
+
+      function setMode(next){
+        mode = (next === "reel") ? "reel" : "post";
+        $("#modePost").classList.toggle("active", mode === "post");
+        $("#modeReel").classList.toggle("active", mode === "reel");
+        $("#modePost").setAttribute("aria-selected", mode === "post" ? "true" : "false");
+        $("#modeReel").setAttribute("aria-selected", mode === "reel" ? "true" : "false");
+
+        // If we already have output, regenerate lightly (optional) — we keep simple: do nothing.
+      }
+
+      function buildCtxSignals(siteText){
+        const keywords = topKeywords(siteText, 18);
+        const features = detectFeatures(siteText);
+        // If site text is empty, inject safe defaults
+        const safeKw = keywords.length ? keywords : ["ilovepaghe","cedolini","paghe","hr","aziende","pdf","email","dashboard","privacy"];
+        return { keywords: safeKw, features };
+      }
+
+      async function onGenerate(){
+        const brief = ($("#brief")?.value || "").trim();
+        $("#hint").style.display = "none";
+
+        setLoading(true);
+        try{
+          // Ensure context
+          if(!siteText){
+            siteText = await buildSiteContext(false);
+          }
+          if(!siteText){
+            // still allow generation with default context, but warn
+            setCtxStatus("Contesto: limitato (impossibile leggere il sito)", "warn");
+          }
+
+          const ctx = buildCtxSignals(siteText || "");
+          const seedStr = (mode + "|" + (brief || "") + "|" + ctx.keywords.join(","));
+          const rng = mulberry32(hash32(seedStr) ^ Date.now()); // fresh each click
+
+          lastOutput = (mode === "reel")
+            ? buildGeneralReel(ctx, brief, rng)
+            : buildGeneralPost(ctx, brief, rng);
+
+          renderBlocks(lastOutput);
+          toast("Generato");
+        }finally{
+          setLoading(false);
+        }
+      }
+
+      async function init(){
+        // Bind
+        $("#modePost").addEventListener("click", () => setMode("post"));
+        $("#modeReel").addEventListener("click", () => setMode("reel"));
+
+        $("#btnGenerate").addEventListener("click", onGenerate);
+
+        $("#btnCopyAll").addEventListener("click", async () => {
+          const ok = await copy(lastOutput.copyAll || "");
+          toast(ok ? "Copiato tutto" : "Impossibile copiare");
         });
 
-        if(file){
-          file.addEventListener("change", () => {
-            const f = file.files && file.files[0] ? file.files[0] : null;
-            state.draftFile = f;
-            updateFileMeta(f);
-            setPreviewMediaFromFile(f);
-
-            const data = collectForm();
-            const errs = validateMedia(data.type, data.file);
-            if(errs.length) showFormError(errs[0]); else showFormError("");
-
-            renderPreview();
-          });
+        // Load context in background (no button)
+        try{
+          siteText = await buildSiteContext(false);
+        }catch(_e){
+          // ignore
         }
 
-        repaint();
-        showTopMsg("Accedi Meta e poi Ricarica asset.", "warn");
-
-        const btnMeta = $("#btnMetaLogin");
-        const btnAssets = $("#btnLoadAssets");
-        const btnJobs = $("#btnRefreshJobs");
-        const btnEnq = $("#btnEnqueue");
-        const btnPub = $("#btnPublish");
-
-        if(btnMeta) btnMeta.addEventListener("click", () => loginWithMeta(btnMeta));
-        if(btnAssets) btnAssets.addEventListener("click", () => loadMetaAssets(btnAssets));
-        if(btnJobs) btnJobs.addEventListener("click", () => refreshJobs(btnJobs));
-
-        if(btnEnq) btnEnq.addEventListener("click", () => enqueueFromForm(false));
-        if(btnPub) btnPub.addEventListener("click", () => enqueueFromForm(true));
+        // First render placeholder blocks
+        lastOutput = {
+          blocks: [
+            { title: "Output", text: "Scrivi un’idea (opzionale) e clicca Genera." }
+          ],
+          copyAll: ""
+        };
+        renderBlocks(lastOutput);
       }
 
       if(document.readyState === "loading"){
