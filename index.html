@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1c6fe6" />
+  <title>Content Studio | iLovePaghe</title>
+  <meta name="robots" content="noindex,nofollow" />
+
+  <style>
+    :root{
+      --bg:#f6f7f8;
+      --card:#ffffff;
+      --stroke:rgba(15,23,42,.10);
+      --text:rgba(15,23,42,.92);
+      --muted:rgba(15,23,42,.62);
+      --accent:#1c6fe6;
+      --accent-soft:rgba(28,111,230,.10);
+      --shadow:0 16px 44px rgba(15,23,42,.06);
+      --r-lg:22px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+      --focus:0 0 0 3px rgba(28,111,230,.18),0 0 0 6px rgba(28,111,230,.08);
+    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body{
+      margin:0;
+      min-height:100%;
+      font-family: ui-sans-serif,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Helvetica,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      letter-spacing:-0.01em;
+      line-height:1.55;
+    }
+    :focus-visible{ outline:none; box-shadow:var(--focus); border-radius:12px; }
+
+    .wrap{
+      width:100%;
+      max-width:1100px;
+      margin:0 auto;
+      padding:calc(20px + var(--safe-top)) clamp(16px,4vw,34px) calc(80px + var(--safe-bot));
+      display:grid;
+      gap:14px;
+    }
+
+    .top{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:var(--r-lg);
+      box-shadow:var(--shadow);
+      padding:14px 14px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px 12px;
+      flex-wrap:wrap;
+    }
+    .title{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .title h1{ margin:0; font-size:16px; font-weight:700; letter-spacing:-0.02em; white-space:nowrap; }
+    .title p{
+      margin:0; font-size:12px; font-weight:560; color:var(--muted);
+      max-width:min(70ch, 90vw); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+
+    .mode{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .pill{
+      border:1px solid rgba(15,23,42,.12);
+      background:rgba(15,23,42,.03);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      font-weight:750;
+      color:rgba(15,23,42,.70);
+      cursor:pointer;
+      user-select:none;
+      transition:transform .16s cubic-bezier(.22,.61,.36,1), background .14s ease, border-color .14s ease;
+      white-space:nowrap;
+    }
+    .pill:active{ transform:translateY(1px) scale(.99); }
+    .pill.active{
+      background:var(--accent-soft);
+      border-color:rgba(28,111,230,.22);
+      color:rgba(18,74,164,.94);
+    }
+
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; flex:1 1 auto; }
+    .btn{
+      border:1px solid rgba(15,23,42,.14);
+      background:#fff;
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:750;
+      color:rgba(15,23,42,.90);
+      cursor:pointer;
+      user-select:none;
+      min-height:40px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition:transform .16s cubic-bezier(.22,.61,.36,1), opacity .14s ease;
+      white-space:nowrap;
+    }
+    .btn:active{ transform:translateY(1px) scale(.99); opacity:.92; }
+    .btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+
+    .spinner{
+      width:14px; height:14px; border-radius:999px;
+      border:2px solid rgba(255,255,255,.45); border-top-color:#fff;
+      display:none; animation:spin .9s linear infinite;
+    }
+    .btn.loading .spinner{ display:inline-block; }
+    @keyframes spin{ to{ transform:rotate(360deg);} }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:var(--r-lg);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding:14px 14px 10px;
+      border-bottom:1px solid rgba(15,23,42,.06);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .cardHead .h{ font-size:14px; font-weight:750; margin:0; }
+
+    .status{
+      font-size:12px;
+      font-weight:650;
+      color:rgba(15,23,42,.58);
+      padding:6px 10px;
+      border:1px solid rgba(15,23,42,.10);
+      background:rgba(15,23,42,.03);
+      border-radius:999px;
+      white-space:nowrap;
+    }
+    .status.good{ background:rgba(52,199,89,.12); border-color:rgba(52,199,89,.18); color:rgba(24,140,70,.92); }
+    .status.warn{ background:rgba(255,159,10,.14); border-color:rgba(255,159,10,.18); color:rgba(155,96,0,.94); }
+    .status.bad{ background:rgba(255,59,48,.12); border-color:rgba(255,59,48,.18); color:rgba(160,30,24,.94); }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+      padding:14px;
+    }
+    @media (min-width: 920px){
+      .grid{ grid-template-columns: .95fr 1.05fr; }
+    }
+
+    .field{ display:grid; gap:8px; }
+    .label{ font-size:12px; font-weight:750; color:rgba(15,23,42,.70); }
+    .textarea{
+      width:100%;
+      border:1px solid rgba(15,23,42,.12);
+      border-radius:14px;
+      background:#fff;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:560;
+      color:rgba(15,23,42,.86);
+      outline:none;
+      min-height:120px;
+      resize:vertical;
+    }
+    .textarea::placeholder{ color:rgba(15,23,42,.45); }
+    .textarea:focus{ border-color:rgba(28,111,230,.35); box-shadow:var(--focus); }
+    .note{ font-size:12px; font-weight:560; color:rgba(15,23,42,.58); }
+
+    .out{ display:grid; gap:12px; }
+    .block{
+      border:1px solid rgba(15,23,42,.10);
+      border-radius:18px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .blockHead{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(15,23,42,.06);
+      background:rgba(15,23,42,.02);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .blockTitle{
+      font-size:12px;
+      font-weight:850;
+      letter-spacing:.02em;
+      color:rgba(15,23,42,.70);
+      text-transform:uppercase;
+    }
+    .mini{
+      font-size:12px;
+      font-weight:750;
+      border:1px solid rgba(15,23,42,.12);
+      background:#fff;
+      border-radius:12px;
+      padding:8px 10px;
+      cursor:pointer;
+      user-select:none;
+      min-height:34px;
+    }
+    .blockBody{ padding:10px 12px 12px; }
+    .pre{ white-space:pre-wrap; font-size:13px; font-weight:560; color:rgba(15,23,42,.82); line-height:1.5; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; font-weight:560; color:rgba(15,23,42,.74); }
+
+    .media{
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(15,23,42,.08);
+      display:block;
+      background:#fff;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      background:rgba(15,23,42,.92);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+      font-weight:650;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease;
+    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(-2px); }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top" role="banner">
+      <div class="title">
+        <h1>Content Studio</h1>
+        <p>1 click: Post → testo + grafica • Reel → testo + cover + video</p>
+      </div>
+
+      <div class="mode" role="tablist" aria-label="Modalità">
+        <button class="pill active" id="modePost" type="button" role="tab" aria-selected="true">General Post</button>
+        <button class="pill" id="modeReel" type="button" role="tab" aria-selected="false">General Reel</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="btnGenerate" type="button">
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Genera</span>
+        </button>
+        <button class="btn" id="btnCopyAll" type="button">Copia tutto</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="cardHead">
+        <h2 class="h">Brief</h2>
+        <span class="status warn" id="apiStatus">API: collegamento…</span>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <div class="label">Idea / angolo (opzionale)</div>
+          <textarea id="brief" class="textarea" placeholder="Esempi:&#10;• Perché inviare cedolini via email senza errori&#10;• Demo iLovePaghe: come funziona in 30 secondi&#10;• Caso reale: da caos a ordine con un processo pulito"></textarea>
+          <div class="note">Nessun bottone extra. Se lasci vuoto, genera “generale”.</div>
+        </div>
+
+        <div class="out" id="outArea"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function(){
+      "use strict";
+
+      // Se poi fai rewrite su Hosting, puoi mettere window.CONTENT_API_BASE="" e chiamare /api/...
+      const API_BASE = (window.CONTENT_API_BASE || "https://ilp-content-gen-108182410176.europe-west1.run.app").replace(/\/+$/, "");
+      const EP_HEALTH = "/health";
+      const EP_CONTENT = "/api/content/generate";
+      const EP_IMAGE = "/api/image/generate";
+      const EP_VIDEO = "/api/video/generate";
+
+      const $ = (s, r=document) => r.querySelector(s);
+      const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+      let mode = "post";
+      let lastOutput = { copyAll:"", blocks:[] };
+      let lastVideoObjectUrl = null;
+
+      function toast(msg){
+        const t = $("#toast");
+        if(!t) return;
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(toast._tm);
+        toast._tm = setTimeout(()=>t.classList.remove("show"), 1400);
+      }
+
+      function setLoading(on){
+        const b = $("#btnGenerate");
+        if(!b) return;
+        b.classList.toggle("loading", !!on);
+        b.disabled = !!on;
+      }
+
+      function setApiStatus(text, kind){
+        const el = $("#apiStatus");
+        if(!el) return;
+        el.textContent = text;
+        el.classList.remove("good","warn","bad");
+        if(kind) el.classList.add(kind);
+      }
+
+      function escapeHtml(str){
+        return String(str ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      async function copy(text){
+        const t = String(text || "").trim();
+        if(!t) return false;
+        try{
+          await navigator.clipboard.writeText(t);
+          return true;
+        }catch(_e){
+          try{
+            const ta = document.createElement("textarea");
+            ta.value = t;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            return true;
+          }catch(_e2){
+            return false;
+          }
+        }
+      }
+
+      async function fetchJSON(url, opts){
+        const controller = new AbortController();
+        const t = setTimeout(()=>controller.abort(), 120000);
+        try{
+          const r = await fetch(url, { ...opts, signal: controller.signal });
+          const txt = await r.text();
+          let data = null;
+          try{ data = JSON.parse(txt); } catch(_e){ data = { raw: txt }; }
+          if(!r.ok){
+            const msg = data?.message || data?.error || ("HTTP " + r.status);
+            const err = new Error(msg);
+            err.status = r.status;
+            err.data = data;
+            throw err;
+          }
+          return data;
+        } finally {
+          clearTimeout(t);
+        }
+      }
+
+      async function fetchBlob(url, opts){
+        const controller = new AbortController();
+        const t = setTimeout(()=>controller.abort(), 15 * 60 * 1000);
+        try{
+          const r = await fetch(url, { ...opts, signal: controller.signal });
+          if(!r.ok){
+            const txt = await r.text().catch(()=> "");
+            throw new Error(txt || ("HTTP " + r.status));
+          }
+          return await r.blob();
+        } finally {
+          clearTimeout(t);
+        }
+      }
+
+      function renderBlocks(out){
+        const area = $("#outArea");
+        if(!area) return;
+
+        if(!out || !Array.isArray(out.blocks) || out.blocks.length === 0){
+          area.innerHTML = `
+            <div class="block">
+              <div class="blockHead"><div class="blockTitle">Output</div></div>
+              <div class="blockBody"><div class="pre">Nessun contenuto generato.</div></div>
+            </div>`;
+          return;
+        }
+
+        area.innerHTML = out.blocks.map((b, idx) => {
+          const title = escapeHtml(b.title || "Blocco");
+          const isImage = b.type === "image" && b.imageUrl;
+          const isVideo = b.type === "video" && b.videoUrl;
+          const isMono = /voiceover|script/i.test(b.title||"");
+          const canCopy = b.copyable !== false;
+          return `
+            <div class="block">
+              <div class="blockHead">
+                <div class="blockTitle">${title}</div>
+                ${canCopy ? `<button class="mini" type="button" data-copy="${idx}">Copia</button>` : ""}
+              </div>
+              <div class="blockBody">
+                ${isImage ? `<img class="media" src="${b.imageUrl}" alt="${escapeHtml(b.alt || "Immagine generata")}" />` : ""}
+                ${isVideo ? `<video class="media" controls playsinline src="${b.videoUrl}"></video>` : ""}
+                ${(!isImage && !isVideo) ? `<div class="pre ${isMono ? "mono" : ""}">${escapeHtml(b.text || "—")}</div>` : ""}
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        $$("button[data-copy]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const i = parseInt(btn.getAttribute("data-copy") || "0", 10);
+            const b = out.blocks[i] || {};
+            const text = b.text || b.copyText || "";
+            const ok = await copy(text);
+            toast(ok ? "Copiato" : "Impossibile copiare");
+          });
+        });
+      }
+
+      function setMode(next){
+        mode = (next === "reel") ? "reel" : "post";
+        $("#modePost").classList.toggle("active", mode === "post");
+        $("#modeReel").classList.toggle("active", mode === "reel");
+        $("#modePost").setAttribute("aria-selected", mode === "post" ? "true" : "false");
+        $("#modeReel").setAttribute("aria-selected", mode === "reel" ? "true" : "false");
+      }
+
+      async function pingHealth(){
+        try{
+          await fetchJSON(API_BASE + EP_HEALTH, { method:"GET" });
+          setApiStatus("API: ok", "good");
+        }catch(_e){
+          setApiStatus("API: offline", "bad");
+        }
+      }
+
+      async function onGenerate(){
+        const brief = ($("#brief")?.value || "").trim();
+
+        if (lastVideoObjectUrl) {
+          try { URL.revokeObjectURL(lastVideoObjectUrl); } catch(_e){}
+          lastVideoObjectUrl = null;
+        }
+
+        setLoading(true);
+        try{
+          // 1) Testo
+          const content = await fetchJSON(API_BASE + EP_CONTENT, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ mode, brief })
+          });
+
+          const blocks = Array.isArray(content?.blocks) ? content.blocks.map(b => ({ title: b.title, text: b.text })) : [];
+          const copyAll = (typeof content?.copyAll === "string" && content.copyAll.trim())
+            ? content.copyAll
+            : blocks.map(b => `${(b.title||"").toUpperCase()}:\n${b.text||""}`).join("\n\n");
+
+          // placeholder grafica
+          const aspectRatio = (mode === "reel") ? "9:16" : "1:1";
+          blocks.push({ title: "Grafica (in generazione…)", text: "", copyable:false });
+          lastOutput = { blocks, copyAll };
+          renderBlocks(lastOutput);
+
+          // 2) Immagine (PNG base64)
+          const img = await fetchJSON(API_BASE + EP_IMAGE, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ mode, brief, aspectRatio })
+          });
+
+          const imgUrl = img?.imageBase64
+            ? ("data:" + (img.mimeType || "image/png") + ";base64," + img.imageBase64)
+            : null;
+
+          lastOutput.blocks = lastOutput.blocks.filter(b => !/^Grafica \(in generazione/.test(b.title||""));
+          if (imgUrl){
+            lastOutput.blocks.push({
+              type:"image",
+              title:`Grafica (${aspectRatio})`,
+              imageUrl: imgUrl,
+              alt: img.altTextIt || "Grafica generata",
+              copyable:false
+            });
+          } else {
+            lastOutput.blocks.push({ title:"Grafica", text:"Errore: immagine non generata.", copyable:false });
+          }
+          renderBlocks(lastOutput);
+
+          // 3) Video (solo Reel) → MP4 binario
+          if(mode === "reel"){
+            lastOutput.blocks.push({ title:"Video (in generazione…)", text:"", copyable:false });
+            renderBlocks(lastOutput);
+
+            const blob = await fetchBlob(API_BASE + EP_VIDEO, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ brief, aspectRatio:"9:16", resolution:"720p" })
+            });
+
+            const vUrl = URL.createObjectURL(blob);
+            lastVideoObjectUrl = vUrl;
+
+            lastOutput.blocks = lastOutput.blocks.filter(b => !/^Video \(in generazione/.test(b.title||""));
+            lastOutput.blocks.push({ type:"video", title:"Video Reel (9:16)", videoUrl: vUrl, copyable:false });
+            renderBlocks(lastOutput);
+          }
+
+          toast("Generato");
+          setApiStatus("API: ok", "good");
+
+        } catch (e) {
+          renderBlocks({ blocks: [{ title:"Errore", text: e?.message || "Errore" }], copyAll:"" });
+          toast("Errore");
+          setApiStatus("API: errore", "warn");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function init(){
+        $("#modePost").addEventListener("click", () => setMode("post"));
+        $("#modeReel").addEventListener("click", () => setMode("reel"));
+        $("#btnGenerate").addEventListener("click", onGenerate);
+
+        $("#btnCopyAll").addEventListener("click", async () => {
+          const ok = await copy(lastOutput.copyAll || "");
+          toast(ok ? "Copiato tutto" : "Impossibile copiare");
+        });
+
+        lastOutput = { blocks: [{ title:"Output", text:"Scrivi un’idea (opzionale) e clicca Genera." }], copyAll:"" };
+        renderBlocks(lastOutput);
+
+        await pingHealth();
+      }
+
+      if(document.readyState === "loading"){
+        document.addEventListener("DOMContentLoaded", init);
+      }else{
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
