@@ -741,11 +741,6 @@
               </div>
 
               <div class="saTopRight">
-                <div class="saEndpoint">
-                  <span class="saMiniLabel">Backend</span>
-                  <input id="backendUrl" class="saInput" placeholder="https://tuo-backend (opzionale se stesso dominio)" />
-                </div>
-
                 <div class="saBtns">
                   <button class="saBtn primary" id="btnMetaLogin" type="button">
                     <span class="saSpinner" aria-hidden="true"></span>
@@ -979,21 +974,14 @@
         return "c_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
       }
       function baseUrl(){
-        const raw = (state.backendUrl || "").trim();
-        return raw.replace(/\/+$/,"");
+        return ""; // sempre same-origin (web.app) per cookie/session
       }
       function api(path){
         const b = baseUrl();
         return b ? (b + path) : path;
       }
       function expectedOrigin(){
-        try{
-          const b = baseUrl();
-          if(!b) return location.origin;
-          return new URL(b).origin;
-        }catch(_e){
-          return location.origin;
-        }
+        return location.origin; // callback arriva su web.app
       }
       function fmtDateTimeLocal(isoOrLocal){
         if(!isoOrLocal) return "—";
@@ -1675,24 +1663,15 @@
 
       // ---------- Init bindings
       function init(){
-        try{
-          state.backendUrl = localStorage.getItem(KEYS.backend) || "";
+        try{          // Backend override disabilitato: sempre stesso dominio (evita 401/cookie cross-site)
+          try{ localStorage.removeItem(KEYS.backend); }catch(_e){}
+          state.backendUrl = "";
           state.metaConnected = (localStorage.getItem(KEYS.connected) === "1");
           state.selected.pageId = localStorage.getItem(KEYS.pageId) || "";
           state.selected.igAccountId = localStorage.getItem(KEYS.igId) || "";
         }catch(_e){}
 
         loadQueue();
-
-        const backend = $("#backendUrl");
-        if(backend){
-          backend.value = state.backendUrl || "";
-          backend.addEventListener("input", () => {
-            state.backendUrl = backend.value || "";
-            try{ localStorage.setItem(KEYS.backend, state.backendUrl); }catch(_e){}
-          });
-        }
-
         const fbSel = $("#fbPageSelect");
         const igSel = $("#igAccountSelect");
 
@@ -1754,7 +1733,7 @@
         }
 
         repaint();
-        showTopMsg("Imposta Backend (se serve), poi Accedi Meta e Ricarica asset.", "warn");
+        showTopMsg("Accedi Meta e poi Ricarica asset.", "warn");
 
         const btnMeta = $("#btnMetaLogin");
         const btnAssets = $("#btnLoadAssets");
