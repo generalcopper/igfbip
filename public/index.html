@@ -188,6 +188,7 @@
     }
     .status.good{ background:rgba(52,199,89,.12); border-color:rgba(52,199,89,.18); color:rgba(24,140,70,.92); }
     .status.warn{ background:rgba(255,159,10,.14); border-color:rgba(255,159,10,.18); color:rgba(155,96,0,.94); }
+    .status.bad{ background:rgba(255,59,48,.12); border-color:rgba(255,59,48,.18); color:rgba(160,30,24,.94); }
 
     .grid{
       display:grid;
@@ -205,7 +206,7 @@
       font-weight:750;
       color:rgba(15,23,42,.70);
     }
-    .input, .textarea{
+    .textarea{
       width:100%;
       border:1px solid rgba(15,23,42,.12);
       border-radius:14px;
@@ -215,10 +216,11 @@
       font-weight:560;
       color:rgba(15,23,42,.86);
       outline:none;
+      min-height:120px;
+      resize:vertical;
     }
-    .input::placeholder, .textarea::placeholder{ color:rgba(15,23,42,.45); }
-    .input:focus, .textarea:focus{ border-color:rgba(28,111,230,.35); box-shadow:var(--focus); }
-    .textarea{ min-height:120px; resize:vertical; }
+    .textarea::placeholder{ color:rgba(15,23,42,.45); }
+    .textarea:focus{ border-color:rgba(28,111,230,.35); box-shadow:var(--focus); }
 
     .note{
       font-size:12px;
@@ -307,7 +309,7 @@
     <div class="top" role="banner" aria-label="Barra Content Studio">
       <div class="title">
         <h1>Content Studio</h1>
-        <p id="subTitle">Generatore manuale • prende contesto da ilovepaghe.com</p>
+        <p>Manuale • AI server-side (Gemini) • il sito viene letto dal backend</p>
       </div>
 
       <div class="mode" role="tablist" aria-label="Modalità">
@@ -327,22 +329,18 @@
     <div class="card" aria-label="Editor">
       <div class="cardHead">
         <h2 class="h">Brief</h2>
-        <span class="status warn" id="ctxStatus">Contesto: in caricamento…</span>
+        <span class="status warn" id="apiStatus">API: collegamento…</span>
       </div>
 
       <div class="grid">
         <div class="field">
           <div class="label">Idea / angolo (opzionale)</div>
           <textarea id="brief" class="textarea" placeholder="Esempi:&#10;• Perché inviare cedolini via email senza errori&#10;• Demo iLovePaghe: come funziona in 30 secondi&#10;• Caso reale: da caos a ordine con un processo pulito"></textarea>
-          <div class="note">
-            Se lasci vuoto, genero un contenuto generale basato sul sito.
-          </div>
+          <div class="note">Se lasci vuoto, genero un contenuto generale basato su ilovepaghe.com.</div>
           <div class="note" id="hint" style="display:none;"></div>
         </div>
 
-        <div class="out" id="outArea">
-          <!-- OUTPUT blocks injected here -->
-        </div>
+        <div class="out" id="outArea"></div>
       </div>
     </div>
   </div>
@@ -353,24 +351,16 @@
     (function(){
       "use strict";
 
-      // ===== Config =====
-      const SITE_BASE = "https://www.ilovepaghe.com";
-      // Best effort: try a few pages. If CORS blocks, fallback to a public text proxy.
-      const PAGES = [
-        "/",
-        "/index.html",
-        "/come-funziona.html",
-        "/dashboard.html",
-        "/premium.html",
-        "/dipendenti.html"
-      ];
+      // ✅ Se in futuro fai rewrite su Hosting, puoi mettere API_BASE="" e chiamare /api/content/generate
+      const API_BASE = (window.CONTENT_API_BASE || "https://ilp-content-gen-108182410176.europe-west1.run.app").replace(/\/+$/, "");
+      const API_GENERATE = "/api/content/generate";
+      const API_HEALTH = "/health";
 
-      const CACHE_KEY = "cs_site_context_v2";
-      const CACHE_TTL_MS = 1000 * 60 * 60 * 12; // 12h
-
-      // ===== DOM helpers =====
       const $ = (s, r=document) => r.querySelector(s);
       const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+      let mode = "post";
+      let lastOutput = { copyAll:"", blocks:[] };
 
       function toast(msg){
         const t = $("#toast");
@@ -388,6 +378,14 @@
         b.disabled = !!on;
       }
 
+      function setApiStatus(text, kind){
+        const el = $("#apiStatus");
+        if(!el) return;
+        el.textContent = text;
+        el.classList.remove("good","warn","bad");
+        if(kind) el.classList.add(kind);
+      }
+
       function escapeHtml(str){
         return String(str ?? "")
           .replace(/&/g, "&amp;")
@@ -395,379 +393,6 @@
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&#039;");
-      }
-
-      // ===== RNG (deterministic-ish) =====
-      function hash32(str){
-        let h = 2166136261 >>> 0;
-        for(let i=0;i<str.length;i++){
-          h ^= str.charCodeAt(i);
-          h = Math.imul(h, 16777619);
-        }
-        return h >>> 0;
-      }
-      function mulberry32(seed){
-        let a = seed >>> 0;
-        return function(){
-          a |= 0;
-          a = (a + 0x6D2B79F5) | 0;
-          let t = Math.imul(a ^ (a >>> 15), 1 | a);
-          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-        };
-      }
-      function pick(arr, rng){ return arr[Math.floor(rng()*arr.length)] || ""; }
-      function pickN(arr, n, rng){
-        const a = arr.slice();
-        const out = [];
-        for(let i=0;i<Math.min(n,a.length);i++){
-          out.push(a.splice(Math.floor(rng()*a.length),1)[0]);
-        }
-        return out;
-      }
-
-      // ===== Site context fetch =====
-      function setCtxStatus(text, kind){
-        const el = $("#ctxStatus");
-        if(!el) return;
-        el.textContent = text;
-        el.classList.remove("good","warn");
-        if(kind) el.classList.add(kind);
-      }
-
-      function cleanText(s){
-        return (s || "")
-          .replace(/\u00a0/g, " ")
-          .replace(/[ \t]+/g, " ")
-          .replace(/\n{3,}/g, "\n\n")
-          .trim();
-      }
-
-      function extractTextFromHtml(html){
-        try{
-          const doc = new DOMParser().parseFromString(html, "text/html");
-          // remove noisy nodes
-          doc.querySelectorAll("script,style,noscript,svg,video,iframe,canvas").forEach(n => n.remove());
-          // optionally remove nav/footer if present
-          doc.querySelectorAll("nav,footer,header").forEach(n => n.remove());
-          const text = doc.body ? doc.body.innerText : "";
-          return cleanText(text);
-        }catch(_e){
-          return cleanText(html);
-        }
-      }
-
-      async function fetchWithTimeout(url, ms){
-        const c = new AbortController();
-        const t = setTimeout(()=>c.abort(), ms);
-        try{
-          const res = await fetch(url, { signal:c.signal, credentials:"omit", cache:"no-store" });
-          return res;
-        }finally{
-          clearTimeout(t);
-        }
-      }
-
-      async function fetchPageTextDirect(url){
-        const res = await fetchWithTimeout(url, 8000);
-        if(!res.ok) throw new Error("HTTP " + res.status);
-        const ct = (res.headers.get("content-type") || "").toLowerCase();
-        const raw = await res.text();
-        if(ct.includes("text/html") || raw.includes("<html") || raw.includes("<body")){
-          return extractTextFromHtml(raw);
-        }
-        return cleanText(raw);
-      }
-
-      async function fetchPageTextProxy(url){
-        // Public text proxy (best-effort). Remove later when backend proxy is ready.
-        // Format: https://r.jina.ai/https://example.com/path
-        const proxy = "https://r.jina.ai/" + url;
-        const res = await fetchWithTimeout(proxy, 12000);
-        if(!res.ok) throw new Error("PROXY HTTP " + res.status);
-        const raw = await res.text();
-        // Proxy often returns text already; keep it lean
-        return cleanText(raw);
-      }
-
-      function compressContext(text){
-        const max = 12000;
-        if(!text) return "";
-        // keep first chunk + some tail for variety
-        if(text.length <= max) return text;
-        const head = text.slice(0, 9000);
-        const tail = text.slice(-2500);
-        return cleanText(head + "\n\n" + tail);
-      }
-
-      async function buildSiteContext(force){
-        // cache
-        try{
-          const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
-          if(!force && cached && cached.ts && (Date.now() - cached.ts) < CACHE_TTL_MS && cached.text){
-            setCtxStatus("Contesto: caricato (cache)", "good");
-            return cached.text;
-          }
-        }catch(_e){}
-
-        setCtxStatus("Contesto: lettura ilovepaghe.com…", "warn");
-
-        const urls = PAGES.map(p => SITE_BASE + p);
-        const texts = [];
-
-        // Try direct (may be blocked by CORS if this page is not on same origin)
-        let directOk = false;
-        for(const u of urls){
-          try{
-            const t = await fetchPageTextDirect(u);
-            if(t) texts.push(t);
-            directOk = true;
-          }catch(_e){ /* ignore */ }
-        }
-
-        // Fallback proxy if direct failed or returned too little
-        if(!directOk || texts.join("\n").length < 1500){
-          const proxyTexts = [];
-          for(const u of urls){
-            try{
-              const t = await fetchPageTextProxy(u);
-              if(t) proxyTexts.push(t);
-            }catch(_e){ /* ignore */ }
-          }
-          if(proxyTexts.length) texts.splice(0, texts.length, ...proxyTexts);
-        }
-
-        const merged = compressContext(texts.join("\n\n---\n\n"));
-        if(!merged || merged.length < 600){
-          setCtxStatus("Contesto: non disponibile (CORS/lettura bloccata)", "warn");
-          // still save empty to avoid loops
-          try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), text:"" })); }catch(_e){}
-          return "";
-        }
-
-        setCtxStatus("Contesto: caricato (sito)", "good");
-        try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), text: merged })); }catch(_e){}
-        return merged;
-      }
-
-      // ===== Context → signals =====
-      const IT_STOP = new Set([
-        "il","lo","la","i","gli","le","un","una","uno","di","a","da","in","con","su","per","tra","fra",
-        "che","e","o","ma","se","non","piu","più","come","del","della","dei","delle","al","allo","alla","ai","agli","alle",
-        "nel","nello","nella","nei","nelle","sul","sullo","sulla","sui","sulle","alla","all","un","una","sono","sei","si","no",
-        "questa","questo","quello","quella","anche","solo","tutto","tutta","tutti","tutte","ogni","oggi","sempre","mai",
-        "puoi","può","fare","fai","fatto","più","meno","molto","molti","molte","così","qui","lì","loro","noi","voi","tu","io"
-      ]);
-
-      function tokenize(text){
-        return (text || "")
-          .toLowerCase()
-          .replace(/[^\p{L}\p{N}\s]+/gu, " ")
-          .split(/\s+/)
-          .map(w => w.trim())
-          .filter(w => w.length >= 3 && !IT_STOP.has(w));
-      }
-
-      function topKeywords(text, limit){
-        const freq = new Map();
-        for(const w of tokenize(text)){
-          freq.set(w, (freq.get(w) || 0) + 1);
-        }
-        return Array.from(freq.entries())
-          .sort((a,b)=> b[1]-a[1])
-          .slice(0, limit || 18)
-          .map(([w])=> w);
-      }
-
-      function detectFeatures(text){
-        const t = (text || "").toLowerCase();
-        return {
-          payroll: /cedolin|buste\s+paga|paghe|retribuz/i.test(t),
-          pdf: /\bpdf\b/.test(t),
-          email: /email|mail/.test(t),
-          dipendenti: /dipendent/i.test(t),
-          sicurezza: /privacy|sicurez|gdpr|dati/i.test(t),
-          premium: /premium|abbonament|piano/i.test(t),
-          demo: /demo|contatt|prenot|richied/i.test(t),
-          automazione: /automat|flusso|process/i.test(t),
-          dashboard: /dashboard|pannello|area\s+riservata/i.test(t),
-        };
-      }
-
-      // ===== Generators (2 modes only) =====
-      function makeHashtags(keywords){
-        const niche = keywords.slice(0, 8);
-        const mid = ["business","produttivita","processi","organizzazione","hr","aziende","lavoro","workflow"];
-        const broad = ["marketing","reelsitalia","instagramtips","socialmedia","contentcreator","branding","howto","startup"];
-
-        const all = [
-          ...niche,
-          ...pickN(mid, 7, mulberry32(hash32(keywords.join("|")+"mid"))),
-          ...pickN(broad, 7, mulberry32(hash32(keywords.join("|")+"broad"))),
-        ]
-          .map(w => "#" + w.replace(/[^a-z0-9_àèéìòù]+/gi,"").slice(0, 28))
-          .filter(x => x.length > 2)
-          .slice(0, 22);
-
-        return all.join(" ");
-      }
-
-      function buildGeneralPost(ctx, brief, rng){
-        const kw = ctx.keywords;
-        const f = ctx.features;
-
-        const angles = [
-          "errore comune",
-          "checklist rapida",
-          "metodo in 3 step",
-          "mito vs realtà",
-          "prima/dopo (ordine vs caos)"
-        ];
-
-        const angle = pick(angles, rng);
-        const topic = brief || (f.payroll ? "gestione e invio cedolini" : "organizzazione del lavoro");
-        const benefit = f.automazione ? "meno tempo perso e meno errori" : "più ordine e più controllo";
-        const proof = f.sicurezza ? "con attenzione a privacy e dati" : "senza complicare i flussi";
-
-        const hooks = [
-          `Se ${topic} ti porta via tempo, probabilmente stai sbagliando una cosa.`,
-          `L’${angle} che ti fa migliorare ${topic} già da oggi.`,
-          `Da caos a ordine: il modo più pulito per gestire ${topic}.`
-        ];
-
-        const body = [
-          hooks[0],
-          "",
-          `👉 Focus: ${angle}.`,
-          "",
-          `Ecco uno schema semplice:`,
-          `1) Definisci l’esito (cosa deve essere vero a fine flusso).`,
-          `2) Riduci i passaggi: tieni solo ciò che cambia il risultato.`,
-          `3) Aggiungi una “prova” (numero, esempio, screenshot) per rendere tutto replicabile.`,
-          "",
-          `Risultato: ${benefit}, ${proof}.`,
-          "",
-          (f.demo ? `Se vuoi, richiedi una demo.` : `Se ti va, scrivimi e ti mando lo schema completo.`)
-        ].join("\n");
-
-        const hashtags = makeHashtags(kw);
-
-        return {
-          blocks: [
-            { title:"Hook (3 opzioni)", text: hooks.join("\n") },
-            { title:"Caption pronta", text: body },
-            { title:"Hashtag", text: hashtags }
-          ],
-          copyAll: ["HOOK:\n"+hooks.join("\n"), "\nCAPTION:\n"+body, "\nHASHTAG:\n"+hashtags].join("\n\n")
-        };
-      }
-
-      function buildGeneralReel(ctx, brief, rng){
-        const kw = ctx.keywords;
-        const f = ctx.features;
-
-        const topic = brief || (f.payroll ? "invio cedolini senza confusione" : "mettere ordine nel processo");
-        const benefit = f.automazione ? "tagli tempo e riduci errori" : "risparmi tempo e lavori più pulito";
-        const proof = f.sicurezza ? "senza perdere controllo su privacy e dati" : "senza passaggi inutili";
-
-        const hookOpts = [
-          `Se ${topic} è sempre un casino, guarda questo.`,
-          `3 step per ${topic} (senza complicarti la vita).`,
-          `Il dettaglio che ti fa ${benefit} in modo stabile.`
-        ];
-
-        const hook = hookOpts[0];
-
-        const onScreen = [
-          `Basta caos su ${topic}`,
-          `Framework: Hook → Valore → Prova → CTA`,
-          `Step 1: esito finale`,
-          `Step 2: togli rumore`,
-          `Step 3: aggiungi una prova`,
-          `Risultato: ${benefit}`,
-          f.demo ? `CTA: richiedi demo` : `CTA: scrivimi`
-        ].join("\n");
-
-        const voice = [
-          `[0–2s] ${hook}`,
-          `[2–7s] Se vuoi ${benefit}, ti serve un processo ripetibile, non “più fatica”.`,
-          `[7–16s] Fai così: 1) definisci l’esito, 2) riduci i passaggi, 3) aggiungi una prova (numero o esempio).`,
-          `[16–24s] Questo ti dà ${benefit}, ${proof}.`,
-          `[24–30s] Salva questo reel. ${f.demo ? "Se vuoi, richiedi una demo." : "Se ti serve, scrivimi."}`
-        ].join("\n");
-
-        const shotlist = [
-          `1) Hook — primo piano / testo grande: “${hook}”`,
-          `2) Problema — b-roll scrivania / schermo: “Troppi passaggi = errori”`,
-          `3) Framework — overlay: “Hook → Valore → Prova → CTA”`,
-          `4) Step — 3 bullet a schermo (veloci, leggibili)`,
-          `5) Risultato — testo: “${benefit}”`,
-          `6) CTA — end card: “Salva • ${f.demo ? "Richiedi demo" : "Scrivimi"}”`
-        ].join("\n");
-
-        const caption = [
-          hook,
-          "",
-          `Schema rapido per ${topic}:`,
-          `• Esito finale chiaro`,
-          `• Passaggi essenziali`,
-          `• Una prova concreta (numero/esempio)`,
-          "",
-          `Risultato: ${benefit}.`,
-          "",
-          (f.demo ? `Vuoi vedere come si applica su iLovePaghe? Richiedi una demo.` : `Se ti va, scrivimi e ti mando la checklist.`)
-        ].join("\n");
-
-        const hashtags = makeHashtags(kw);
-
-        return {
-          blocks: [
-            { title:"Hook (3 opzioni)", text: hookOpts.join("\n") },
-            { title:"On-screen text", text: onScreen },
-            { title:"Voiceover", text: voice, mono:true },
-            { title:"Shotlist", text: shotlist },
-            { title:"Caption pronta", text: caption },
-            { title:"Hashtag", text: hashtags }
-          ],
-          copyAll: [
-            "HOOK (3 opzioni):\n"+hookOpts.join("\n"),
-            "\nON-SCREEN:\n"+onScreen,
-            "\nVOICEOVER:\n"+voice,
-            "\nSHOTLIST:\n"+shotlist,
-            "\nCAPTION:\n"+caption,
-            "\nHASHTAG:\n"+hashtags
-          ].join("\n\n")
-        };
-      }
-
-      // ===== UI render =====
-      let mode = "post";
-      let siteText = "";
-      let lastOutput = { copyAll:"", blocks:[] };
-
-      function renderBlocks(out){
-        const area = $("#outArea");
-        if(!area) return;
-        area.innerHTML = out.blocks.map((b, idx) => `
-          <div class="block">
-            <div class="blockHead">
-              <div class="blockTitle">${escapeHtml(b.title)}</div>
-              <button class="mini" type="button" data-copy="${idx}">Copia</button>
-            </div>
-            <div class="blockBody">
-              <div class="pre ${b.mono ? "mono" : ""}">${escapeHtml(b.text || "—")}</div>
-            </div>
-          </div>
-        `).join("");
-
-        $$("button[data-copy]").forEach(btn => {
-          btn.addEventListener("click", async () => {
-            const i = parseInt(btn.getAttribute("data-copy") || "0", 10);
-            const text = out.blocks[i]?.text || "";
-            const ok = await copy(text);
-            toast(ok ? "Copiato" : "Impossibile copiare");
-          });
-        });
       }
 
       async function copy(text){
@@ -793,59 +418,120 @@
         }
       }
 
+      function renderBlocks(out){
+        const area = $("#outArea");
+        if(!area) return;
+
+        if(!out || !Array.isArray(out.blocks) || out.blocks.length === 0){
+          area.innerHTML = `
+            <div class="block">
+              <div class="blockHead"><div class="blockTitle">Output</div></div>
+              <div class="blockBody"><div class="pre">Nessun contenuto generato.</div></div>
+            </div>`;
+          return;
+        }
+
+        area.innerHTML = out.blocks.map((b, idx) => `
+          <div class="block">
+            <div class="blockHead">
+              <div class="blockTitle">${escapeHtml(b.title || "Blocco")}</div>
+              <button class="mini" type="button" data-copy="${idx}">Copia</button>
+            </div>
+            <div class="blockBody">
+              <div class="pre ${/voiceover|script/i.test(b.title||"") ? "mono" : ""}">${escapeHtml(b.text || "—")}</div>
+            </div>
+          </div>
+        `).join("");
+
+        $$("button[data-copy]").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const i = parseInt(btn.getAttribute("data-copy") || "0", 10);
+            const text = out.blocks[i]?.text || "";
+            const ok = await copy(text);
+            toast(ok ? "Copiato" : "Impossibile copiare");
+          });
+        });
+      }
+
       function setMode(next){
         mode = (next === "reel") ? "reel" : "post";
         $("#modePost").classList.toggle("active", mode === "post");
         $("#modeReel").classList.toggle("active", mode === "reel");
         $("#modePost").setAttribute("aria-selected", mode === "post" ? "true" : "false");
         $("#modeReel").setAttribute("aria-selected", mode === "reel" ? "true" : "false");
-
-        // If we already have output, regenerate lightly (optional) — we keep simple: do nothing.
       }
 
-      function buildCtxSignals(siteText){
-        const keywords = topKeywords(siteText, 18);
-        const features = detectFeatures(siteText);
-        // If site text is empty, inject safe defaults
-        const safeKw = keywords.length ? keywords : ["ilovepaghe","cedolini","paghe","hr","aziende","pdf","email","dashboard","privacy"];
-        return { keywords: safeKw, features };
+      async function fetchJSON(url, opts){
+        const controller = new AbortController();
+        const t = setTimeout(()=>controller.abort(), 20000);
+        try{
+          const r = await fetch(url, { ...opts, signal: controller.signal });
+          const txt = await r.text();
+          let data = null;
+          try{ data = JSON.parse(txt); } catch(_e){ data = { raw: txt }; }
+          if(!r.ok){
+            const msg = data?.message || data?.error || ("HTTP " + r.status);
+            const err = new Error(msg);
+            err.status = r.status;
+            err.data = data;
+            throw err;
+          }
+          return data;
+        } finally {
+          clearTimeout(t);
+        }
+      }
+
+      async function pingHealth(){
+        try{
+          await fetchJSON(API_BASE + API_HEALTH, { method:"GET" });
+          setApiStatus("API: ok", "good");
+        }catch(_e){
+          setApiStatus("API: offline", "bad");
+        }
       }
 
       async function onGenerate(){
         const brief = ($("#brief")?.value || "").trim();
+        setLoading(true);
         $("#hint").style.display = "none";
 
-        setLoading(true);
         try{
-          // Ensure context
-          if(!siteText){
-            siteText = await buildSiteContext(false);
-          }
-          if(!siteText){
-            // still allow generation with default context, but warn
-            setCtxStatus("Contesto: limitato (impossibile leggere il sito)", "warn");
-          }
+          const out = await fetchJSON(API_BASE + API_GENERATE, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ mode, brief })
+          });
 
-          const ctx = buildCtxSignals(siteText || "");
-          const seedStr = (mode + "|" + (brief || "") + "|" + ctx.keywords.join(","));
-          const rng = mulberry32(hash32(seedStr) ^ Date.now()); // fresh each click
-
-          lastOutput = (mode === "reel")
-            ? buildGeneralReel(ctx, brief, rng)
-            : buildGeneralPost(ctx, brief, rng);
+          lastOutput = {
+            blocks: Array.isArray(out?.blocks) ? out.blocks : [],
+            copyAll: (typeof out?.copyAll === "string" && out.copyAll.trim())
+              ? out.copyAll
+              : (Array.isArray(out?.blocks) ? out.blocks.map(b => `${(b.title||"").toUpperCase()}:\n${b.text||""}`).join("\n\n") : "")
+          };
 
           renderBlocks(lastOutput);
           toast("Generato");
-        }finally{
+          setApiStatus("API: ok", "good");
+
+        } catch (e) {
+          const msg = e?.message || "Errore generazione";
+          renderBlocks({
+            blocks: [
+              { title: "Errore", text: msg + "\n\nSe è 'missing_key', imposta GEMINI_API_KEY su Cloud Run (meglio via Secret Manager)." }
+            ],
+            copyAll: ""
+          });
+          toast("Errore");
+          setApiStatus("API: errore", "warn");
+        } finally {
           setLoading(false);
         }
       }
 
       async function init(){
-        // Bind
         $("#modePost").addEventListener("click", () => setMode("post"));
         $("#modeReel").addEventListener("click", () => setMode("reel"));
-
         $("#btnGenerate").addEventListener("click", onGenerate);
 
         $("#btnCopyAll").addEventListener("click", async () => {
@@ -853,21 +539,10 @@
           toast(ok ? "Copiato tutto" : "Impossibile copiare");
         });
 
-        // Load context in background (no button)
-        try{
-          siteText = await buildSiteContext(false);
-        }catch(_e){
-          // ignore
-        }
-
-        // First render placeholder blocks
-        lastOutput = {
-          blocks: [
-            { title: "Output", text: "Scrivi un’idea (opzionale) e clicca Genera." }
-          ],
-          copyAll: ""
-        };
+        lastOutput = { blocks: [{ title:"Output", text:"Scrivi un’idea (opzionale) e clicca Genera." }], copyAll:"" };
         renderBlocks(lastOutput);
+
+        await pingHealth();
       }
 
       if(document.readyState === "loading"){
