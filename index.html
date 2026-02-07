@@ -18,7 +18,6 @@
       --accent-soft:rgba(28,111,230,.10);
       --shadow:0 16px 44px rgba(15,23,42,.06);
       --r-lg:22px;
-      --r-md:16px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bot: env(safe-area-inset-bottom, 0px);
       --focus:0 0 0 3px rgba(28,111,230,.18),0 0 0 6px rgba(28,111,230,.08);
@@ -56,11 +55,40 @@
       gap:10px 12px;
       flex-wrap:wrap;
     }
-    .title{ display:flex; flex-direction:column; gap:2px; min-width:0; }
-    .title h1{ margin:0; font-size:16px; font-weight:700; letter-spacing:-0.02em; white-space:nowrap; }
-    .title p{
-      margin:0; font-size:12px; font-weight:560; color:var(--muted);
-      max-width:min(70ch, 90vw); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .brandLogo{
+      height:26px;
+      width:auto;
+      display:block;
+    }
+    .brandText{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .brandText h1{
+      margin:0;
+      font-size:14px;
+      font-weight:750;
+      letter-spacing:-0.02em;
+      white-space:nowrap;
+    }
+    .brandText p{
+      margin:0;
+      font-size:12px;
+      font-weight:560;
+      color:var(--muted);
+      max-width:min(68ch, 90vw);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
     }
 
     .mode{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -174,6 +202,7 @@
     .textarea::placeholder{ color:rgba(15,23,42,.45); }
     .textarea:focus{ border-color:rgba(28,111,230,.35); box-shadow:var(--focus); }
     .note{ font-size:12px; font-weight:560; color:rgba(15,23,42,.58); }
+    .note strong{ font-weight:750; }
 
     .out{ display:grid; gap:12px; }
 
@@ -254,9 +283,12 @@
 <body>
   <div class="wrap">
     <div class="top" role="banner">
-      <div class="title">
-        <h1>Content Studio</h1>
-        <p>1 click: Post → testo + grafica • Reel → testo + cover + video</p>
+      <div class="brand">
+        <img class="brandLogo" src="https://www.ilovepaghe.com/ilovepaghe_logobluvsblack.png" alt="iLovePaghe" onerror="this.style.display='none'" />
+        <div class="brandText">
+          <h1>Content Studio</h1>
+          <p>1 click: Post → testo + grafica • Reel → testo + cover + video</p>
+        </div>
       </div>
 
       <div class="mode" role="tablist" aria-label="Modalità">
@@ -283,7 +315,7 @@
         <div class="field">
           <div class="label">Idea / angolo (opzionale)</div>
           <textarea id="brief" class="textarea" placeholder="Esempi:&#10;• Perché inviare cedolini via email senza errori&#10;• Demo iLovePaghe: come funziona in 30 secondi&#10;• Caso reale: da caos a ordine con un processo pulito"></textarea>
-          <div class="note">Nessun bottone extra. Se lasci vuoto, genera “generale”.</div>
+          <div class="note">Per includere il logo nella grafica, scrivi <strong>con logo</strong> nel brief.</div>
         </div>
 
         <div class="out">
@@ -450,13 +482,12 @@
         el.textContent = lines.join("\n").trim();
       }
 
-      function renderMediaPlaceholder(kind){
+      function renderMediaPlaceholder(label){
         const media = $("#mediaOut");
         if(!media) return;
-        const label = kind === "video" ? "Video (in generazione…)" : "Grafica (in generazione…)";
         media.innerHTML = `
           <div class="skeleton" aria-hidden="true"></div>
-          <div class="mediaLabel">${label}</div>
+          <div class="mediaLabel">${escapeHtml(label || "In generazione…")}</div>
         `;
       }
 
@@ -482,8 +513,15 @@
         media.innerHTML = parts.join("");
       }
 
+      function wantsLogo(brief){
+        const b = (brief || "").toLowerCase();
+        // trigger volutamente esplicito, niente falsi positivi
+        return /\bcon\s+logo\b/.test(b) || /\[logo\]/.test(b) || /#logo\b/.test(b) || /\+logo\b/.test(b);
+      }
+
       async function onGenerate(){
         const brief = ($("#brief")?.value || "").trim();
+        const includeLogo = wantsLogo(brief);
 
         if (lastVideoObjectUrl) {
           try { URL.revokeObjectURL(lastVideoObjectUrl); } catch(_e){}
@@ -492,10 +530,10 @@
 
         setLoading(true);
         try{
-          // 1) testo
           $("#textOut").textContent = "Generazione testo…";
           $("#mediaOut").innerHTML = `<div class="pre">In attesa…</div>`;
 
+          // 1) testo
           const content = await fetchJSON(API_BASE + EP_CONTENT, {
             method: "POST",
             headers: { "content-type": "application/json" },
@@ -511,23 +549,24 @@
 
           // 2) immagine
           const aspectRatio = (mode === "reel") ? "9:16" : "1:1";
-          renderMediaPlaceholder("image");
+          renderMediaPlaceholder("Grafica (in generazione…)");
 
           const img = await fetchJSON(API_BASE + EP_IMAGE, {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ mode, brief, aspectRatio })
+            body: JSON.stringify({ mode, brief, aspectRatio, includeLogo })
           });
 
           const imgUrl = img?.imageBase64
             ? ("data:" + (img.mimeType || "image/png") + ";base64," + img.imageBase64)
             : null;
 
-          renderMedia(imgUrl, `Grafica (${aspectRatio})`, null);
+          const label = includeLogo ? `Grafica con logo (${aspectRatio})` : `Grafica (${aspectRatio})`;
+          renderMedia(imgUrl, label, null);
 
           // 3) video (solo Reel)
           if(mode === "reel"){
-            renderMediaPlaceholder("video");
+            renderMediaPlaceholder("Video (in generazione…)");
 
             const blob = await fetchBlob(API_BASE + EP_VIDEO, {
               method: "POST",
@@ -538,7 +577,6 @@
             const vUrl = URL.createObjectURL(blob);
             lastVideoObjectUrl = vUrl;
 
-            // mostra cover + video
             renderMedia(imgUrl, "Cover (9:16)", vUrl);
           }
 
